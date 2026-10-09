@@ -3,7 +3,7 @@
   <h1>Easy Salaires</h1>
   <p><strong>Swiss payroll. One clear workspace. Your data stays on your computer.</strong></p>
   <p>An offline desktop app for small businesses, with a full year of payroll at a glance.</p>
-  <p><strong>Tauri 2 · Vue 3 · TypeScript · Rust · SQLite</strong><br />French & English · macOS & Windows targets</p>
+  <p><strong>Tauri 2 · Vue 3 · TypeScript · Rust · SQLite</strong><br />French & English · Mac Apple Silicon & Windows x64</p>
   <p><a href="#getting-started">Getting started</a> · <a href="#the-payroll-workflow">Workflow</a> · <a href="#data-and-backups">Data & backups</a> · <a href="#documentation">Documentation</a></p>
 </div>
 
@@ -26,6 +26,25 @@ The app includes a **2026 CCNC / Neuchâtel preset**. Company-specific insurance
 | Local storage | Keep each company's records, logos, document history and annual exports in a portable SQLite database. |
 | Personalization | Switch between French and English and choose Kiwi, Ocean, Lavender or Terracotta colors. |
 
+## Downloads
+
+Get the latest installers from [GitHub Releases](https://github.com/DwennK/Easy-Salaires/releases/latest):
+
+- **Mac Apple Silicon (M1 and newer):** `.dmg`, macOS 12 or later. Move the app into Applications before opening it.
+- **Windows 64-bit (x64):** `.exe` installer.
+
+Only these two architectures are published. Updater archives, signatures and `latest.json` are support files for in-app updates.
+
+The initial installation may show an OS trust warning: releases use Tauri update signatures and ad-hoc macOS signing, without paid Apple/Microsoft distribution certificates or Apple notarization.
+
+### In-app updates
+
+The bottom of the sidebar shows the installed version and announces updates. Open it and choose **Install and restart**. Checks run when the menu first loads and every six hours while the app is visible; you can also check manually. Offline checks never block payroll work.
+
+Save open edits before installing. The app creates a fresh consistent backup of the open database in `Easy-Salaires-backups/before-updates/` (or the configured backup folder), verifies the signed update and restarts. These pre-update backups are retained separately from the 30 daily backups. Payroll data stays local; only version checks and update downloads contact GitHub.
+
+The first updater-enabled release is **0.1.0**. Older development builds need a one-time manual installation; later published versions can be installed from the app.
+
 ## Getting started
 
 ### Requirements
@@ -35,7 +54,7 @@ The app includes a **2026 CCNC / Neuchâtel preset**. Company-specific insurance
 - **macOS:** Xcode Command Line Tools. The configured minimum deployment target is macOS 12.
 - **Windows:** Visual Studio Build Tools with C++ tooling, Windows SDK and WebView2.
 
-The recorded development environment uses Node.js 26.10.0 and Rust 1.94.1. Native macOS builds have been exercised on Apple Silicon; Windows builds and runtime behavior still require validation on Windows.
+The recorded development environment uses Node.js 26.10.0 and Rust 1.94.1. GitHub Actions builds and runs the application/storage tests on macOS Apple Silicon and Windows x64. Interactive Windows runtime validation is separate from CI.
 
 ```sh
 git clone https://github.com/DwennK/Easy-Salaires.git
@@ -105,6 +124,7 @@ For browser checks, start `pnpm dev` in a separate terminal, then run:
 pnpm test:ui  # Payroll, PDF, Excel, persistence and FR/EN flows
 pnpm test:ux  # Guided setup, forms and validation
 pnpm test:v2  # Annual editing, shared data, payments and four themes
+pnpm test:updater # Update UI, offline/retry and unsaved-edit guards (mocked IPC)
 ```
 
 The browser scripts use installed **Google Chrome** with an isolated temporary profile. They do not reuse a personal browser profile or download Chromium. Generated screenshots and verification files are written under the ignored `output/` directory.
@@ -116,7 +136,7 @@ pnpm tauri build --bundles app  # macOS application bundle, on macOS
 pnpm tauri build                # Platform installers, on the target OS
 ```
 
-Build artifacts are generated under `src-tauri/target/release/bundle/`. Build and test Windows installers on Windows. Apple distribution signing, notarization and Windows installer validation remain separate delivery steps; this repository does not configure a release or deployment pipeline.
+Build artifacts are generated under `src-tauri/target/release/bundle/`. The [release workflow](.github/workflows/release.yml) runs on version tags such as `v0.1.0`. It uses standard GitHub-hosted runners, builds only Apple Silicon and Windows x64, verifies both signed update packages, and publishes a release only after both builds succeed. See [release operations](docs/releases.md) for versioning and signing-key handling. Local signed builds require the same private key through `TAURI_SIGNING_PRIVATE_KEY`; it is never committed.
 
 ### Project structure
 
@@ -141,7 +161,7 @@ docs/                  Architecture, rules, validation and asset provenance
 - **No Swissdec certification**, withholding-tax calculation, bank integration or electronic filing.
 - The salary certificate uses the **original Swiss Federal Tax Administration Form 11**. Identity, period, fields 1, 8, 9, 10.1 and 11, and reviewed remarks are partially prefilled. More complex cases require completion in a PDF reader using the included guide.
 - Insurance and pension inputs depend on company contracts and employee circumstances. Review the documented rules before issuing payroll.
-- macOS 12 is a configured minimum target, not a verified test environment. Local macOS bundles are not distribution-signed or notarized. Windows has not been built or executed in the recorded validation.
+- macOS 12 is a configured minimum target, not a verified test environment. Local macOS bundles are not distribution-signed or notarized. Windows installers are built and tested at the storage level in CI; this does not replace interactive Windows testing.
 
 ## Documentation
 
@@ -151,3 +171,5 @@ The detailed project notes are currently in French:
 - [Architecture and data model](docs/architecture.md)
 - [Recorded validation and platform limitations](docs/validation.md)
 - [Bundled assets, provenance and third-party licenses](docs/assets.md)
+
+- [Release workflow and updater operations](docs/releases.md)
