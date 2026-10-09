@@ -14,7 +14,7 @@ import type { State, Payroll, Employee } from "../domain/types";
 import { clone, today } from "../domain/defaults";
 import { activeIn } from "../domain/payroll";
 import { prepareMonth } from "../domain/service";
-import { money, sum, francs } from "../domain/money";
+import { money, sum, francs, decimalText } from "../domain/money";
 import { tr, months, lang } from "../lib/i18n";
 import Modal from "./Modal.vue";
 import Field from "./Field.vue";
@@ -118,6 +118,7 @@ function showPayment(p: Payroll) {
 const repeat = ref<{ period: string; value: string } | null>(null);
 function change(period: string, key: "salary" | "hours", event: Event) {
   const input = event.target as HTMLInputElement;
+  input.value = decimalText(input.value);
   emit("cell", employeeId.value, period, key, input.value, false);
 }
 function rowStatus(row: (typeof rows.value)[number]) {
@@ -258,7 +259,7 @@ watch(
                       class="grid-input"
                       inputmode="decimal"
                       :aria-label="`${tr('baseSalary')} ${months()[i]}`"
-                      :value="row.p.terms.salary"
+                      :value="decimalText(row.p.terms.salary)"
                       :disabled="busy"
                       @change="change(row.period, 'salary', $event)"
                     /><button
@@ -280,7 +281,7 @@ watch(
                       class="grid-input"
                       inputmode="decimal"
                       :aria-label="`${tr('hours')} ${months()[i]}`"
-                      :value="row.p.input.hours ?? ''"
+                      :value="decimalText(row.p.input.hours)"
                       :placeholder="tr('hours')"
                       :disabled="busy"
                       @change="change(row.period, 'hours', $event)"

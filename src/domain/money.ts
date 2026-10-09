@@ -25,8 +25,23 @@ export const francs = (value: number): string =>
   new Decimal(value).div(100).toFixed(2);
 export const sum = (values: number[]): number =>
   values.reduce((a, b) => a + b, 0);
+/** Keep localized grouping, but always display a decimal point. */
+export function formatNumber(
+  value: number,
+  lang = "fr",
+  minimumFractionDigits = 0,
+  maximumFractionDigits = 8,
+): string {
+  return new Intl.NumberFormat(lang === "fr" ? "fr-CH" : "en-CH", {
+    minimumFractionDigits,
+    maximumFractionDigits,
+  })
+    .formatToParts(value)
+    .map((part) => (part.type === "decimal" ? "." : part.value))
+    .join("");
+}
+/** Preserve precision and incomplete input; parsing still accepts both separators. */
+export const decimalText = (value: string | null | undefined): string =>
+  (value ?? "").replace(/,/g, ".");
 export const money = (value: number, lang = "fr"): string =>
-  new Intl.NumberFormat(lang === "fr" ? "fr-CH" : "en-CH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value / 100);
+  formatNumber(value / 100, lang, 2, 2);

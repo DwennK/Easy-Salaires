@@ -4,7 +4,7 @@ import type { Employee, Contribution } from "../domain/types";
 import { clone, periodNow } from "../domain/defaults";
 import { tr } from "../lib/i18n";
 import { termsDiff, validateEmployee } from "../domain/service";
-import { d } from "../domain/money";
+import { d, decimalText } from "../domain/money";
 import { addressReady, validAmount } from "../lib/ux";
 import Modal from "./Modal.vue";
 import Field from "./Field.vue";
@@ -259,9 +259,9 @@ async function submit() {
             <div>
               <dt>{{ tr("salaryConfirm") }}</dt>
               <dd>
-                {{ term.salary || tr("notEntered") }} CHF
+                {{ decimalText(term.salary) || tr("notEntered") }} CHF
                 {{ tr(term.mode === "monthly" ? "perMonth" : "perHour") }} ·
-                {{ term.activity }} %
+                {{ decimalText(term.activity) }} %
               </dd>
             </div>
             <div>

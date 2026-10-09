@@ -36,6 +36,7 @@ function set(id: string, key: "employee" | "employer", value: string | null) {
           :label="`${tr('employeePays')} (${c.kind === 'percent' ? '%' : 'CHF'})`"
           :placeholder="c.employee ?? tr('notEntered')"
           :hint="tr('emptyInherits')"
+          inputmode="decimal"
         />
         <Field
           :model-value="model.find((o) => o.id === c.id)?.employer ?? ''"
@@ -43,6 +44,7 @@ function set(id: string, key: "employee" | "employer", value: string | null) {
           :label="`${tr('employerPays')} (${c.kind === 'percent' ? '%' : 'CHF'})`"
           :placeholder="c.employer ?? tr('notEntered')"
           :hint="tr('emptyInherits')"
+          inputmode="decimal"
         />
       </div>
       <button

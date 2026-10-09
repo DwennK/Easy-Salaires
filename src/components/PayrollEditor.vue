@@ -11,7 +11,7 @@ import type { Payroll, State, Element, Revision } from "../domain/types";
 import { clone, uid } from "../domain/defaults";
 import { applicable, calculate } from "../domain/payroll";
 import { missingEarlier } from "../domain/service";
-import { d, francs, money as formatMoney } from "../domain/money";
+import { d, francs, money as formatMoney, decimalText } from "../domain/money";
 import { tr, periodLabel, lang } from "../lib/i18n";
 import Modal from "./Modal.vue";
 import Field from "./Field.vue";
@@ -263,7 +263,7 @@ function payload() {
         inputmode="decimal" />
       <div v-else class="salary-line">
         <span>{{ tr("monthlySalary") }}</span
-        ><strong>{{ draft.terms.salary }} CHF</strong>
+        ><strong>{{ decimalText(draft.terms.salary) }} CHF</strong>
       </div>
       <div v-for="el in draft.input.elements" :key="el.id" class="element">
         <header>
@@ -400,8 +400,9 @@ function payload() {
         <div>
           <strong>{{ tr(line.label) }}</strong
           ><small
-            >{{ tr("base") }} {{ line.base }} CHF · {{ line.quantity }} ×
-            {{ line.rate || "—" }} ·
+            >{{ tr("base") }} {{ decimalText(line.base) }} CHF ·
+            {{ decimalText(line.quantity) }} ×
+            {{ decimalText(line.rate) || "—" }} ·
             {{
               /^https:\/\//.test(line.origin)
                 ? tr("sourcePreset")

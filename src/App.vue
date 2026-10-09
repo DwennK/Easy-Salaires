@@ -50,7 +50,7 @@ import {
 } from "./domain/service";
 import { applicable, activeIn } from "./domain/payroll";
 import { demoState } from "./domain/demo";
-import { money as formatMoney, sum, d } from "./domain/money";
+import { money as formatMoney, sum, d, decimalText } from "./domain/money";
 import { tr, lang, months, periodLabel } from "./lib/i18n";
 import {
   native,
@@ -1070,7 +1070,7 @@ onMounted(() =>
                           >{{ p.employee.firstName }}
                           {{ p.employee.lastName }}</strong
                         ><small
-                          >{{ p.terms.activity }} %{{
+                          >{{ decimalText(p.terms.activity) }} %{{
                             p.employee.role === "owner"
                               ? ` · ${tr("owner")}`
                               : ""
@@ -1084,8 +1084,10 @@ onMounted(() =>
                       tr(p.terms.mode === "monthly" ? "monthlyMode" : "hourly")
                     }}</span
                     ><small v-if="p.terms.mode === 'hourly'"
-                      >{{ p.input.hours ?? "—" }} h ×
-                      {{ p.terms.salary }} CHF</small
+                      >{{
+                        p.input.hours == null ? "—" : decimalText(p.input.hours)
+                      }}
+                      h × {{ decimalText(p.terms.salary) }} CHF</small
                     >
                   </td>
                   <td class="num">
@@ -1231,8 +1233,10 @@ onMounted(() =>
               <div class="employee-salary">
                 <strong
                   >{{
-                    applicable(e.terms, period)?.salary ??
-                    e.terms.at(-1)?.salary
+                    decimalText(
+                      applicable(e.terms, period)?.salary ??
+                        e.terms.at(-1)?.salary,
+                    )
                   }}
                   CHF</strong
                 ><small>{{

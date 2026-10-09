@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { decimalText } from "../domain/money";
 import { computed } from "vue";
 import type { Terms, Contribution } from "../domain/types";
 import { tr, months } from "../lib/i18n";
@@ -45,10 +46,10 @@ const salaryValid = computed(() => validAmount(model.value.salary));
     <p class="salary-confirmation" v-if="salaryValid" role="status">
       {{ tr("salaryConfirm") }} :
       <strong
-        >{{ model.salary }} CHF
+        >{{ decimalText(model.salary) }} CHF
         {{ tr(model.mode === "monthly" ? "perMonth" : "perHour") }}</strong
       ><span v-if="model.mode === 'monthly'">
-        · {{ tr("atActivity") }} {{ model.activity }} %</span
+        · {{ tr("atActivity") }} {{ decimalText(model.activity) }} %</span
       >
     </p>
     <div class="form-grid">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, useId } from "vue";
+import { computed, ref, useId } from "vue";
+import { decimalText } from "../domain/money";
 import { periodLabel } from "../lib/i18n";
 const props = withDefaults(
   defineProps<{
@@ -17,6 +18,16 @@ const props = withDefaults(
 );
 const id = useId();
 const model = defineModel<string | null>({ required: true });
+const focused = ref(false);
+const display = (value: string | null | undefined) =>
+  props.inputmode === "decimal" ? decimalText(value) : (value ?? "");
+function finishInput(event: FocusEvent) {
+  focused.value = false;
+  if (props.inputmode === "decimal") {
+    model.value = decimalText(model.value);
+    (event.target as HTMLInputElement).value = model.value;
+  }
+}
 const help = computed(
   () =>
     props.hint ||
@@ -31,12 +42,14 @@ const help = computed(
     <input
       :id="id"
       :aria-label="label"
-      :value="model ?? ''"
+      :value="focused ? (model ?? '') : display(model)"
+      @focus="focused = true"
+      @blur="finishInput"
       @input="model = ($event.target as HTMLInputElement).value"
       :type="type"
       :required="required"
       :disabled="disabled"
-      :placeholder="placeholder"
+      :placeholder="display(placeholder)"
       :inputmode="inputmode"
       :maxlength="maxLength ?? 500"
       :aria-invalid="error ? true : undefined"
