@@ -21,10 +21,10 @@ The app includes a **2026 CCNC / Neuchâtel preset**. Company-specific insurance
 | Payroll calculations | Handle monthly and hourly pay, explicit prorating, overtime, salary-impacting absences, allowances and 13th-salary accruals and payments. |
 | Shared employee records | Update common details while preserving explicit monthly exceptions. |
 | Payment tracking | Record the amount paid and payment date separately from the calculated net salary, including partial payments. |
-| Document history | Generate A4 payslips, retain original PDF revisions and identify documents that need updating. |
+| Document history | Preview payslips directly from the annual workspace, generate A4 PDFs, retain original revisions and identify documents that need updating. |
 | Exports | Produce individual or merged monthly PDFs, UTF-8 CSV, numeric Excel workbooks and a partially prefilled official salary certificate. |
 | Local storage | Keep each company's records, logos, document history and annual exports in a portable SQLite database. |
-| Personalization | Switch between French and English and choose Kiwi, Ocean, Lavender or Terracotta colors. |
+| Personalization | Switch between French and English and choose Ocean (the default), Kiwi, Lavender or Terracotta colors. |
 
 ## Downloads
 
@@ -87,12 +87,16 @@ Open `http://127.0.0.1:1420`. The web preview uses demo data stored in IndexedDB
 
 The monthly overview provides a balanced accounting CSV with account numbers to assign. The annual summary provides CSV/Excel exports and the official salary certificate. Shared contribution settings apply to the selected year; there is no separate effective-month selector in the current workflow.
 
+Salary, hours and rate inputs accept either a comma or a decimal point and normalize the displayed separator to a point. Monetary totals are displayed with two decimal places.
+
 ## Data and backups
 
 **Native SQLite is the source of truth.** A company database includes employee records, rules, payrolls, immutable revisions, original PDFs and annual exports. An **exported backup `.db`** is portable between the desktop platforms.
 
+Open **Settings → Backups**, or use the sidebar's **Backups** shortcut, to export a copy, view the last exported backup, change the automatic backup folder or restore a file. Save pending edits before exporting. These file operations require the desktop app.
+
 - **Automatic backups:** before changes when opening an existing database, at most once per day. The app retains 30 automatic backups per database. The default location is `Easy-Salaires-backups` beside the database; the destination is configurable.
-- **Portable exports:** use **Export a .db backup** to produce a consistent file, including changes in the SQLite write-ahead log. Avoid copying a live working database directly.
+- **Portable exports:** use **Create a backup** to produce a consistent `.db` file, including changes in the SQLite write-ahead log. Avoid copying a live working database directly.
 - **Validated restoration:** the app checks its signature, schema version, integrity and foreign keys, preserves a backup of the previous file, and restores to a newly chosen filename without overwriting an existing database.
 - **Automatic upgrades:** older supported databases are backed up in `before-migrations/` and upgraded transactionally when opened, including after a manual app installation. Restoration upgrades only the destination copy. Schema and JSON formats newer than this app are rejected; migration backups are retained separately from daily rotation.
 - **Concurrent-write protection:** an operating-system lock and version counter protect against conflicting writes. An empty `.db.lockfile` may remain after closing; it contains no payroll data and is not part of a backup.
@@ -117,7 +121,15 @@ pnpm check
 
 # Real SQLite storage tests without building Tauri; temporary artifacts are removed
 pnpm test:storage
+
+# Migration/fixture integrity and persisted-type compatibility contract
+pnpm check:data
+
+# Desktop build cleanup helper, without producing an installer
+pnpm test:build-storage
 ```
+
+The [data compatibility workflow](.github/workflows/compatibility.yml) runs `pnpm check` on pull requests and pushes to `main`. The release workflow also runs these checks and native Tauri tests on both desktop targets before packaging.
 
 For browser checks, start `pnpm dev` in a separate terminal, then run:
 
@@ -129,6 +141,23 @@ pnpm test:updater # Update UI, offline/retry and unsaved-edit guards (mocked IPC
 ```
 
 The browser scripts use installed **Google Chrome** with an isolated temporary profile. They do not reuse a personal browser profile or download Chromium. Generated screenshots and verification files are written under the ignored `output/` directory.
+
+Focused browser regression scripts are also available with the same running development server:
+
+```sh
+node scripts/payroll-easy-ui-test.mjs     # Single-save payslip editing and payments
+node scripts/monthly-ui-test.mjs          # Monthly overview and payroll actions
+node scripts/backups-ui-test.mjs          # Backup settings and navigation (mocked IPC)
+node scripts/decimal-ui-test.mjs          # Decimal display and comma input
+pnpm exec tsx scripts/demo-history-ui-test.mjs # Historical demo data and preservation
+node scripts/year-navigation-ui-test.mjs  # Payroll and contribution year selection
+```
+
+### Data compatibility when contributing
+
+Read [the architecture](docs/architecture.md), [`data-format.json`](data-format.json) and the [compatibility contract](tests/fixtures/data/compatibility.json) before changing persisted data. Application versions, SQLite schema versions, JSON model versions and the optimistic write counter are separate.
+
+Add consecutively numbered SQL migrations; never rewrite existing migrations or historical fixtures. Changes to JSON meaning require an ordered upgrade path and regression coverage. Preserve company inputs, recorded payments, archived revisions and original PDFs. Persisted-type changes require a compatibility review and tests before updating the contract. Run `pnpm check` before delivery; see [AGENTS.md](AGENTS.md) for the full requirements.
 
 ### Desktop builds
 
@@ -151,9 +180,11 @@ src-tauri/
 public/
   fonts/               Embedded PDF font and its license
   templates/           Official salary certificate and guide
-scripts/               Browser verification flows
-tests/                 Payroll, workflow and document tests
+scripts/               Browser checks, compatibility checks, builds and releases
+tests/                 Payroll, workflow, document and compatibility tests
+  fixtures/data/       Frozen historical data and compatibility contract
 docs/                  Architecture, rules, validation and asset provenance
+data-format.json       Shared JSON model version for TypeScript and Rust
 ```
 
 ## Scope and limitations
@@ -171,5 +202,4 @@ The detailed project notes are currently in French:
 - [Architecture and data model](docs/architecture.md)
 - [Recorded validation and platform limitations](docs/validation.md)
 - [Bundled assets, provenance and third-party licenses](docs/assets.md)
-
 - [Release workflow and updater operations](docs/releases.md)
