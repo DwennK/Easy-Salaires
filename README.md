@@ -132,11 +132,10 @@ The browser scripts use installed **Google Chrome** with an isolated temporary p
 ### Desktop builds
 
 ```sh
-pnpm tauri build --bundles app  # macOS application bundle, on macOS
-pnpm tauri build                # Platform installers, on the target OS
+pnpm build:desktop  # Apple Silicon Mac or Windows x64, on the target OS
 ```
 
-Build artifacts are generated under `src-tauri/target/release/bundle/`. The [release workflow](.github/workflows/release.yml) runs on version tags such as `v0.1.0`. It uses standard GitHub-hosted runners, builds only Apple Silicon and Windows x64, verifies both signed update packages, and publishes a release only after both builds succeed. See [release operations](docs/releases.md) for versioning and signing-key handling. Local signed builds require the same private key through `TAURI_SIGNING_PRIVATE_KEY`; it is never committed.
+Local builds keep only the latest packages in `output/builds/darwin-arm64/` or `output/builds/win32-x64/`. Compilation uses a temporary Cargo directory, removed after success or failure. This saves disk space at the cost of recompiling dependencies for each local release build. Development (`pnpm tauri dev`) still uses its normal cache. The [release workflow](.github/workflows/release.yml) runs on version tags such as `v0.1.0`. It uses standard GitHub-hosted runners, builds only Apple Silicon and Windows x64, verifies both signed update packages, and publishes a release only after both builds succeed. See [release operations](docs/releases.md) for versioning and signing-key handling. Local signed builds require the same private key through `TAURI_SIGNING_PRIVATE_KEY`; it is never committed.
 
 ### Project structure
 

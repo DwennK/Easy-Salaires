@@ -10,6 +10,8 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vue-tsc --noEmit && vite build",
+    "build:desktop": "node scripts/build-desktop.mjs",
+    "test:build-storage": "node --test scripts/build-desktop-check.mjs",
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run",
     "test:ui": "node scripts/ui-test.mjs",

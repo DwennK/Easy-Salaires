@@ -42,7 +42,7 @@ A failed build leaves a draft, not a partial update. Retry failed jobs or dispat
 - The updater requires an authenticated version in each signature (`requireSignedVersion`). Release validation rejects modified files, incorrect keys and mismatched versions.
 - Tauri update signing is distinct from paid Apple/Microsoft code-signing certificates. macOS uses an ad-hoc signature; releases are not Apple-notarized.
 
-For a local signed build, set `TAURI_SIGNING_PRIVATE_KEY` to the private-key file path and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` to an empty string before `pnpm tauri build`. Do not paste the key into tracked files or build logs.
+For a local signed build, set `TAURI_SIGNING_PRIVATE_KEY` to the private-key file path and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` to an empty string before `pnpm build:desktop`. Do not paste the key into tracked files or build logs.
 
 ## Update behavior
 
@@ -55,3 +55,9 @@ The browser test suite uses mocked native IPC: it validates UI states and call o
 ## Cost
 
 Standard GitHub-hosted runners are free for public repositories, including macOS and Windows. This workflow uses no larger runner and uploads distributables directly to GitHub Releases rather than retaining Actions artifacts. See [GitHub's billing documentation](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
+
+## Local build storage
+
+Prefer the GitHub tag workflow for releases: compilation runs on disposable runners. For a local installer, use `pnpm build:desktop`; only the latest packages per supported platform remain in `output/builds/`, and temporary Rust compilation files are removed after success, failure or a handled interruption. The command does not touch company data, signing keys or development caches. An OS crash or force-kill can leave a temporary `easy-salaires-build-*` directory and a platform lock in `output/builds/`; inspect these before removing them or retrying.
+
+Advanced `pnpm tauri build` and direct Cargo commands still retain normal caches in `src-tauri/target/`. Once native apps and compilation processes have stopped, `cargo clean --manifest-path src-tauri/Cargo.toml` removes that project cache (including any bundles it contains). Keep needed installers first and check that `CARGO_TARGET_DIR` does not redirect to a shared cache. Avoid keeping duplicate downloaded release packages after QA; retain lightweight reports and screenshots.
