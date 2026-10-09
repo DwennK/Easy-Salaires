@@ -78,7 +78,7 @@ jobs:
       - name: Check application and storage
         run: |
           pnpm check
-          cargo test --locked --manifest-path src-tauri/Cargo.toml --target "${{ matrix.target }}"
+          cargo test --locked --release --manifest-path src-tauri/Cargo.toml --target "${{ matrix.target }}"
       - name: Build signed installer and updater package
         run: pnpm tauri build --target "${{ matrix.target }}" --ci
         env:

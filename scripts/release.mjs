@@ -39,7 +39,7 @@ function validateVersion() {
     /^version = "([^"]+)"/m,
   )?.[1];
   const lock = readFileSync("src-tauri/Cargo.lock", "utf8").match(
-    /name = "easy-salaires"\nversion = "([^"]+)"/,
+    /name = "easy-salaires"\r?\nversion = "([^"]+)"/,
   )?.[1];
   if (cargo !== version || lock !== version)
     fail("Rust versions differ from package.json");
