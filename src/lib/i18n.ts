@@ -40,6 +40,46 @@ const pairs: Record<string, [string, string]> = {
   annual: ["Récapitulatif annuel", "Annual summary"],
   settings: ["Paramètres", "Settings"],
   files: ["Fichier & sauvegardes", "File & backups"],
+  backups: ["Sauvegardes", "Backups"],
+  openCompanyLabel: ["Ouvrir une entreprise", "Open a company"],
+  backupStatusUnavailable: ["Statut indisponible", "Status unavailable"],
+  companyMenu: ["Menu de l’entreprise", "Company menu"],
+  backupNow: ["Sauvegarder maintenant", "Back up now"],
+  backupDesktopOnly: [
+    "Les sauvegardes sont disponibles dans l’application desktop.",
+    "Backups are available in the desktop app.",
+  ],
+  backupCopyHelp: [
+    "Une copie de l’entreprise, des employés et des documents à conserver sur un autre support.",
+    "A copy of your company, employees and documents to keep on another drive.",
+  ],
+  backupLastExport: ["Dernière sauvegarde exportée", "Last exported backup"],
+  backupNone: ["Aucune pour le moment", "None yet"],
+  backupSaveFirst: [
+    "Enregistrez les modifications dans les autres onglets avant de créer une sauvegarde.",
+    "Save your changes in the other tabs before creating a backup.",
+  ],
+  backupAutomatic: ["Sauvegardes automatiques", "Automatic backups"],
+  backupAutomaticHelp: [
+    "Une copie locale par jour à l’ouverture de l’entreprise. Les 30 dernières sont conservées.",
+    "One local copy per day when opening the company. The latest 30 are kept.",
+  ],
+  backupFolderLabel: [
+    "Dossier de sauvegarde · toutes les entreprises",
+    "Backup folder · all companies",
+  ],
+  backupChangeFolder: ["Modifier le dossier", "Change folder"],
+  backupRestoreHelp: [
+    "Ouvre une copie sauvegardée dans un nouveau fichier. Votre entreprise actuelle est conservée.",
+    "Opens a saved copy in a new file. Your current company is preserved.",
+  ],
+  backupChoose: ["Choisir une sauvegarde", "Choose a backup"],
+  backupFileDetails: ["Détails du fichier", "File details"],
+  backupFormat: ["Format des sauvegardes", "Backup format"],
+  backupFormatHelp: [
+    "Fichier .db · entreprise, employés et documents inclus.",
+    ".db file · includes company, employees and documents.",
+  ],
   offline: ["Hors ligne · Données locales", "Offline · Local data"],
   welcome: ["Votre paie, en toute simplicité.", "Payroll, simply."],
   welcomeText: [

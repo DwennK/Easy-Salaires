@@ -27,8 +27,8 @@ export const uiCopy: Record<string, [string, string]> = {
 
   monthly: ["Salaires du mois", "Monthly payroll"],
   settingsSub: [
-    "Les informations de votre entreprise et les règles de calcul des salaires.",
-    "Company details and payroll calculation settings.",
+    "Les informations de votre entreprise, les cotisations et les sauvegardes.",
+    "Company details, contributions and backups.",
   ],
   rules: ["Cotisations et assurances", "Contributions and insurance"],
   open: ["Ouvrir une entreprise existante", "Open an existing company"],

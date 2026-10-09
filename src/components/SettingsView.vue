@@ -173,6 +173,7 @@ function saveRules() {
       :items="[
         { id: 'company', label: 'company' },
         { id: 'rules', label: 'rules' },
+        { id: 'backups', label: 'backups' },
       ]"
       :label="tr('settingsTabs')"
     >
@@ -430,6 +431,9 @@ function saveRules() {
             {{ tr("saveRules") }}
           </button>
         </div>
+      </section>
+      <section v-show="tab === 'backups'">
+        <slot name="backups" :dirty="dirty" />
       </section>
     </Tabs>
   </div>

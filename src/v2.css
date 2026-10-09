@@ -728,7 +728,13 @@ select:focus-visible {
   border-radius: 15px;
 }
 .save-bar {
-  background: var(--surface);
+  background: var(--paper);
+  padding: 12px 0;
+  gap: 12px;
+  backdrop-filter: none;
+}
+.settings-layout .save-bar .button {
+  margin: 0;
 }
 .section-tabs {
   border-color: var(--border);
@@ -742,6 +748,38 @@ select:focus-visible {
 }
 .settings-layout {
   max-width: 1100px;
+}
+.topbar-company {
+  border: 0;
+  padding: 2px 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.topbar-company:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+.company-menu-actions {
+  display: grid;
+  gap: 12px;
+}
+.company-menu-actions .button {
+  justify-content: flex-start;
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .settings-layout .section-tabs {
+    display: grid;
+    grid-template-columns: 0.9fr 1.5fr 1fr;
+    gap: 8px;
+  }
+  .settings-layout .section-tabs button {
+    min-width: 0;
+    font-size: 12px;
+    white-space: normal;
+  }
 }
 .settings-section {
   border-color: var(--border);

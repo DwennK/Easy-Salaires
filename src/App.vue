@@ -76,6 +76,7 @@ import Modal from "./components/Modal.vue";
 import EmployeeEditor from "./components/EmployeeEditor.vue";
 import PayrollEditor from "./components/PayrollEditor.vue";
 import SettingsView from "./components/SettingsView.vue";
+import BackupSettings from "./components/BackupSettings.vue";
 import Field from "./components/Field.vue";
 import SetupGuide from "./components/SetupGuide.vue";
 import { availableYears, payrollAction, rulesReady } from "./lib/ux";
@@ -93,7 +94,7 @@ const state = ref<State | null>(null),
   path = ref(""),
   recents = ref<string[]>([]),
   backupDir = ref(""),
-  filesOpen = ref(false),
+  companyMenuOpen = ref(false),
   employeeEdit = ref<Employee | null>(null),
   payrollEdit = ref<Payroll | null>(null),
   showSecondary = ref(false),
@@ -110,6 +111,7 @@ const settingsTab = ref("company");
 const settingsView = ref<{ dirty: boolean }>();
 const pendingNavigation = ref<(() => void) | null>(null);
 const lastBackup = ref<{ date: string; path: string } | null>(null);
+const backupStatusError = ref(false);
 function requestNavigation(action: () => void) {
   if (settingsView.value?.dirty) pendingNavigation.value = action;
   else action();
@@ -173,13 +175,34 @@ const workflowStep = computed(() =>
         : 3,
 );
 async function loadBackupStatus() {
+  backupStatusError.value = false;
   lastBackup.value = native
     ? await command<{ date: string; path: string } | null>("backupStatus")
     : null;
 }
-watch(filesOpen, (value) => {
-  if (value) run(loadBackupStatus);
-});
+watch(
+  () =>
+    state.value &&
+    page.value === "settings" &&
+    settingsTab.value === "backups" &&
+    !busy.value,
+  (visible) => {
+    if (visible)
+      loadBackupStatus().catch(() => {
+        lastBackup.value = null;
+        backupStatusError.value = true;
+      });
+  },
+);
+function showBackups() {
+  // Switching settings tabs keeps their in-progress forms mounted.
+  settingsTab.value = "backups";
+  page.value = "settings";
+}
+function companyAction(action: () => void) {
+  companyMenuOpen.value = false;
+  requestNavigation(action);
+}
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
 const selectedEmployee = ref("");
 const nav = [
@@ -352,7 +375,7 @@ async function startDemo() {
     } else await commit(await seed());
     period.value = "2026-10";
     page.value = "salaries";
-    filesOpen.value = false;
+    companyMenuOpen.value = false;
   });
 }
 async function openCompany(action = "open", file = "") {
@@ -368,11 +391,13 @@ async function openCompany(action = "open", file = "") {
     if (!r) return;
     await restoreState(r.state);
     path.value = r.path;
-    filesOpen.value = false;
+    lastBackup.value = null;
+    companyMenuOpen.value = false;
     page.value = "salaries";
     if (!state.value) {
       const next = emptyState();
       await commit(next);
+      settingsTab.value = "company";
       page.value = "settings";
     }
   });
@@ -390,7 +415,9 @@ async function createCompany() {
     await commit(s);
     path.value = r.path;
     createOpen.value = false;
-    filesOpen.value = false;
+    companyMenuOpen.value = false;
+    lastBackup.value = null;
+    settingsTab.value = "company";
     page.value = "settings";
   });
 }
@@ -764,7 +791,8 @@ async function switchCompany() {
   await run(async () => {
     if (native) await command("close");
     state.value = null;
-    filesOpen.value = false;
+    lastBackup.value = null;
+    companyMenuOpen.value = false;
     path.value = "";
   });
 }
@@ -836,7 +864,10 @@ onMounted(() =>
         ><span>Easy <b>Salaires</b></span></a
       ><button
         class="company-switch"
-        @click="requestNavigation(() => (filesOpen = true))"
+        @click="companyMenuOpen = true"
+        :disabled="busy"
+        :aria-label="tr('companyMenu')"
+        aria-haspopup="dialog"
       >
         <span class="company-avatar"><Building2 :size="19" /></span
         ><span
@@ -858,10 +889,9 @@ onMounted(() =>
         </button>
       </nav>
       <div class="sidebar-bottom">
-        <button @click="requestNavigation(() => (filesOpen = true))">
-          <FolderOpen :size="18" />{{ tr("files") }}
+        <button @click="showBackups" :title="tr('backups')">
+          <HardDrive :size="18" />{{ tr("backups") }}
         </button>
-        <div class="local-status"><i></i>{{ tr("offline") }}</div>
         <ThemePicker />
         <AppUpdater
           :blocked="
@@ -878,7 +908,15 @@ onMounted(() =>
     <div class="workspace">
       <header class="topbar">
         <span
-          >{{ state.company.name || "Easy Salaires" }}
+          ><button
+            class="topbar-company"
+            :disabled="busy"
+            :aria-label="tr('companyMenu')"
+            aria-haspopup="dialog"
+            @click="companyMenuOpen = true"
+          >
+            {{ state.company.name || "Easy Salaires" }}
+          </button>
           <ChevronRight :size="13" /> <strong>{{ tr(page) }}</strong></span
         ><span class="topbar-right"
           ><span v-if="state.company.demo" class="demo-tag">{{
@@ -1522,7 +1560,22 @@ onMounted(() =>
           :busy="busy"
           @save="companySave"
           @rules="rulesSave"
-        />
+        >
+          <template #backups="{ dirty }">
+            <BackupSettings
+              :native="native"
+              :busy="busy"
+              :dirty="dirty"
+              :path="path"
+              :backup-dir="backupDir"
+              :last-backup="lastBackup"
+              :status-error="backupStatusError"
+              @backup="backup"
+              @folder="folder"
+              @restore="requestNavigation(() => openCompany('restore'))"
+            />
+          </template>
+        </SettingsView>
       </main>
       <footer class="workspace-footer">
         Easy Salaires <span>CHF · {{ tr("offline") }}</span>
@@ -1623,49 +1676,41 @@ onMounted(() =>
       :title="tr('preview')"
     ></iframe
   ></Modal>
-  <Modal v-if="filesOpen" :title="tr('files')" @close="filesOpen = false"
-    ><h3>{{ tr("fileLocation") }}</h3>
-    <p class="file-path">{{ path || tr("webDemo") }}</p>
-    <div class="backup-status">
-      <h3>{{ tr("lastBackup") }}</h3>
-      <p v-if="lastBackup">
-        {{
-          new Date(lastBackup.date).toLocaleString(
-            lang === "fr" ? "fr-CH" : "en-CH",
-          )
-        }}<br /><span class="file-path">{{ lastBackup.path }}</span>
-      </p>
-      <p v-else class="hint">{{ tr("backupUnknown") }}</p>
-    </div>
-    <p class="hint">{{ tr("backupManualHelp") }}</p>
-    <div class="file-actions">
+  <Modal
+    v-if="companyMenuOpen"
+    :title="state?.company.name || tr('company')"
+    @close="companyMenuOpen = false"
+  >
+    <div class="company-menu-actions">
       <button
         class="button secondary"
-        :disabled="!native || busy"
-        @click="backup"
+        :disabled="busy"
+        @click="companyAction(switchCompany)"
       >
-        <Download :size="17" />{{ tr("backup") }}</button
-      ><button
-        class="button secondary"
-        :disabled="!native || busy"
-        @click="openCompany('restore')"
-      >
-        <FolderOpen :size="17" />{{ tr("restore") }}
+        <Building2 :size="18" />{{ tr("switchCompany") }}
       </button>
-      <p class="hint">{{ tr("restoreHelp") }}</p>
-      <h3>{{ tr("backupFolder") }}</h3>
-      <p class="hint">{{ tr("backupHelp") }}</p>
-      <p class="file-path">{{ backupDir || tr("backupDefault") }}</p>
       <button
         class="button secondary"
         :disabled="!native || busy"
-        @click="folder"
+        @click="companyAction(() => openCompany())"
       >
-        {{ tr("chooseFolder") }}</button
-      ><button class="text-button" :disabled="busy" @click="switchCompany">
-        {{ tr("switchCompany") }} <ArrowUpRight :size="16" />
-      </button></div
-  ></Modal>
+        <FolderOpen :size="18" />{{ tr("openCompanyLabel") }}
+      </button>
+      <button
+        class="button secondary"
+        :disabled="!native || busy"
+        @click="
+          companyAction(() => {
+            companyName = '';
+            createOpen = true;
+          })
+        "
+      >
+        <Plus :size="18" />{{ tr("create") }}
+      </button>
+    </div>
+    <p v-if="!native" class="hint">{{ tr("nativeOnly") }}</p>
+  </Modal>
   <Modal
     v-if="certificateEmployee && state"
     :title="tr('certificateReview')"
