@@ -54,10 +54,34 @@ async function discardRules() {
     .click();
 }
 try {
-  await page.goto(process.env.UI_URL || "http://127.0.0.1:1421");
+  await page.goto(process.env.UI_URL || "http://127.0.0.1:1420");
   await page
     .getByRole("button", { name: "Essayer la démonstration", exact: true })
     .click();
+  await page.getByRole("heading", { name: "Les salaires." }).waitFor();
+  // This scenario exercises a missing prior year, independently of demo history.
+  await page.evaluate(async () => {
+    const { loadPreview, persist } = await import("/src/lib/bridge.ts");
+    const state = await loadPreview();
+    state.company.demoHistoryVersion = 1;
+    state.rules = state.rules.filter((r) => r.year === 2026);
+    state.payrolls = state.payrolls.filter((p) => p.period.startsWith("2026"));
+    state.revisions = state.revisions.filter((r) =>
+      state.payrolls.some((p) => p.id === r.payrollId),
+    );
+    for (const employee of state.employees) {
+      employee.start = "2026-01-01";
+      employee.terms[0].effective = "2026-01";
+    }
+    for (const payroll of state.payrolls) {
+      payroll.employee = structuredClone(
+        state.employees.find((e) => e.id === payroll.employeeId),
+      );
+      payroll.terms.effective = "2026-01";
+    }
+    await persist(state);
+  });
+  await page.reload();
   await annual();
   assert((await options()).includes("2025"));
   await year().selectOption("2025");

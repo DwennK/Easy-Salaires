@@ -591,6 +591,14 @@ const pairs: Record<string, [string, string]> = {
     "Les taux d’assurance de la démonstration sont fictifs.",
     "The demo insurance rates are fictional.",
   ],
+  demoRulesHelp: [
+    "Taux et plafonds fictifs pour tester la démonstration. Ils ne constituent pas des préréglages officiels pour cette année.",
+    "Fictional rates and caps for testing the demo. These are not official presets for this year.",
+  ],
+  demoCertificate: [
+    "DÉMONSTRATION · Données fictives · Sans valeur officielle",
+    "DEMONSTRATION · Fictional data · Not an official document",
+  ],
 };
 Object.assign(pairs, uiCopy, v2Copy, updateCopy);
 export function tr(key: string, l: Lang = lang.value): string {

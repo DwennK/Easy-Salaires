@@ -71,6 +71,8 @@ export interface Employee {
 export interface Company {
   /** Persisted in the existing company JSON; no SQL schema rewrite. */
   modelVersion?: number;
+  /** Persisted with the company in both SQLite and browser demo storage. */
+  demoHistoryVersion?: number;
   name: string;
   address: string;
   postal: string;

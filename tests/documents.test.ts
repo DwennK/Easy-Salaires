@@ -66,6 +66,7 @@ it("keeps spreadsheet amounts numeric and neutralizes formula injection", async 
 it("fills official canonical fields; tax net excludes IJM and preserves editable form", async () => {
   const s = demoState(),
     e = s.employees[0]!;
+  s.company.demo = false;
   s.payrolls[0]!.result.lines.push({
     id: "ijm",
     label: "ijm",
@@ -98,6 +99,48 @@ it("fills official canonical fields; tax net excludes IJM and preserves editable
   expect(form.getCheckBox("OptionKreuzOhneRahmen_F").isChecked()).toBe(true);
   expect(form.getTextField("TextLinks_D").getText()).toBe("2026");
   expect(form.getFields().length).toBeGreaterThan(30);
+  expect(pdf.getSubject()).toBeUndefined();
+  expect(form.getTextField("TextLinks_15_1").getText()).toBe(
+    "Contrôle des données effectué.",
+  );
   await mkdir("output/qa", { recursive: true });
   await writeFile("output/qa/certificate-test.pdf", bytes);
+}, 20000);
+
+it("labels historical demo certificates without inventing an AVS number", async () => {
+  const s = demoState();
+  for (const year of [2024, 2025]) {
+    for (const e of s.employees) {
+      const bytes = await certificatePdf(
+        s,
+        year,
+        e,
+        {
+          transport: false,
+          meals: false,
+          remarks: "Remarque conservée",
+        },
+        load,
+      );
+      const pdf = await PDFDocument.load(bytes);
+      const form = pdf.getForm();
+      expect(pdf.getSubject()).toBe(
+        "DÉMONSTRATION · Données fictives · Sans valeur officielle",
+      );
+      expect(form.getTextField("AHVLinks_C").getText() ?? "").toBe("");
+      expect(form.getTextField("TextLinks_D").getText()).toBe(String(year));
+      expect(form.getTextField("TextLinks_E-von").getText()).toBe(
+        `${year}-01-01`,
+      );
+      expect(form.getTextField("TextLinks_E-bis").getText()).toBe(
+        `${year}-12-31`,
+      );
+      expect(form.getTextField("DezZahlNull_11").getText()).toBe(
+        String(Math.round(certificateNumbers(s, year, e.id).net / 100)),
+      );
+      expect(form.getTextField("TextLinks_15_1").getText()).toBe(
+        "Remarque conservée",
+      );
+    }
+  }
 }, 20000);

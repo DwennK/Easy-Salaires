@@ -49,7 +49,7 @@ import {
   recordPayment,
 } from "./domain/service";
 import { applicable, activeIn } from "./domain/payroll";
-import { demoState } from "./domain/demo";
+import { backfillDemoHistory, demoState } from "./domain/demo";
 import { money as formatMoney, sum, d, decimalText } from "./domain/money";
 import { tr, lang, months, periodLabel } from "./lib/i18n";
 import {
@@ -323,6 +323,22 @@ async function seed(): Promise<State> {
   }
   return s;
 }
+async function restoreState(loaded: State | null) {
+  if (!loaded) {
+    state.value = null;
+    return;
+  }
+  const s = upgradeState(clone(loaded));
+  const added = backfillDemoHistory(s);
+  if (added !== null) {
+    for (const p of added.filter((p) => !p.result.errors.length)) {
+      const bytes = await payslipPdf(p, 1, s.company.lang);
+      issueRevision(s, p, toBase64(bytes));
+    }
+    await persist(s);
+  }
+  state.value = s;
+}
 async function startDemo() {
   await run(async () => {
     if (native) {
@@ -331,7 +347,7 @@ async function startDemo() {
       );
       if (!r) return;
       path.value = r.path;
-      if (r.state) state.value = r.state ? upgradeState(r.state) : null;
+      if (r.state) await restoreState(r.state);
       else await commit(await seed());
     } else await commit(await seed());
     period.value = "2026-10";
@@ -350,7 +366,7 @@ async function openCompany(action = "open", file = "") {
       { path: file },
     );
     if (!r) return;
-    state.value = r.state ? upgradeState(r.state) : null;
+    await restoreState(r.state);
     path.value = r.path;
     filesOpen.value = false;
     page.value = "salaries";
@@ -676,7 +692,12 @@ async function generateCertificate() {
       e = certificateEmployee.value!;
     if (annualMissing(s, year.value, e.id).length)
       throw Error("incompletePayroll");
-    if (!e.avs || !e.address || !s.company.contact || !s.company.responsible)
+    if (
+      (!s.company.demo && !e.avs) ||
+      !e.address ||
+      !s.company.contact ||
+      !s.company.responsible
+    )
       throw Error("documentAddressRequired");
     const data = toBase64(await certificatePdf(s, year.value, e, review.value));
     const name = `${year.value}_${safeName(e.lastName)}_certificat.pdf`;
@@ -733,13 +754,13 @@ onMounted(() =>
         path: string;
         config: { recent: string[]; backupDir: string };
       }>("startup");
-      state.value = r.state ? upgradeState(r.state) : null;
+      await restoreState(r.state);
       path.value = r.path;
       recents.value = r.config.recent;
       backupDir.value = r.config.backupDir;
     } else {
       const loaded = await loadPreview();
-      state.value = loaded ? upgradeState(loaded) : null;
+      await restoreState(loaded);
       if (state.value) period.value = "2026-10";
     }
   }),
@@ -1631,6 +1652,7 @@ onMounted(() =>
       {{ year }}
     </h3>
     <p class="hint">{{ tr("certificateHelp") }}</p>
+    <p v-if="state.company.demo" class="notice">{{ tr("demoCertificate") }}</p>
     <p
       v-if="annualMissing(state, year, certificateEmployee.id).length"
       class="notice"

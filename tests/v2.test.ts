@@ -104,7 +104,11 @@ it("replaces yearly rates on issued and unissued months and inherits each non-ov
   expect(jan.result.lines.find((l) => l.id === "avs")!.rate).toBe("6");
   expect(jan.result.lines.find((l) => l.id === "aanp")!.rate).toBe("1.5");
   expect(jan.result.lines.find((l) => l.id === "aanp")!.employer).toBe(2080);
-  expect(s.rules.every((r) => r.effective === "2026-01")).toBe(true);
+  expect(
+    s.rules
+      .filter((r) => r.year === 2026)
+      .every((r) => r.effective === "2026-01"),
+  ).toBe(true);
 });
 it("upgrades legacy monthly exceptions and payment amounts without rewriting revision snapshots", () => {
   const s = demoState();
@@ -219,7 +223,10 @@ it("upgrading old result shapes does not invalidate an unchanged original PDF", 
 it("makes only legacy divergent contribution fields into employee exceptions", () => {
   const s = demoState(),
     e = s.employees[0]!;
-  e.terms[0]!.overrides = clone(s.rules[0]!.contributions);
+  e.terms[0]!.overrides = clone(
+    s.rules.find((r) => r.year === Number(e.terms[0]!.effective.slice(0, 4)))!
+      .contributions,
+  );
   e.terms[0]!.overrides.find((c) => c.id === "aanp")!.employee = "1.7";
   upgradeState(s);
   expect(e.terms[0]!.overrides).toEqual([{ id: "aanp", employee: "1.7" }]);

@@ -104,7 +104,11 @@ function stable(value: unknown): string {
 }
 function documentData(p: Payroll) {
   const { terms: _terms, archived: _archived, ...identity } = p.employee;
-  const { modelVersion: _modelVersion, ...company } = p.company;
+  const {
+    modelVersion: _modelVersion,
+    demoHistoryVersion: _demoHistoryVersion,
+    ...company
+  } = p.company;
   return stable([
     identity,
     company,

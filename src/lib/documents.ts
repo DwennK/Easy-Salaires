@@ -473,6 +473,17 @@ export async function certificatePdf(
     `${s.company.name}\n${s.company.address}, ${s.company.postal} ${s.company.city}\n${s.company.responsible} · ${s.company.contact}`,
   );
   form.updateFieldAppearances(font);
+  if (s.company.demo) {
+    for (const page of pdf.getPages())
+      page.drawText(tr("demoCertificate", s.company.lang), {
+        x: 35,
+        y: page.getHeight() - 10,
+        size: 7.5,
+        font,
+        color: rgb(0.65, 0.12, 0.12),
+      });
+    pdf.setSubject(tr("demoCertificate", s.company.lang));
+  }
   return pdf.save({ useObjectStreams: false });
 }
 export const encoded = toBase64;

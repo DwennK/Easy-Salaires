@@ -71,6 +71,16 @@ watch(
 const availableYears = computed(() =>
   payrollYears(props.state, rules.value.year),
 );
+const demoWithoutSources = computed(
+  () =>
+    props.state.company.demo &&
+    rules.value.verified &&
+    !rules.value.sources.length,
+);
+function setSource(key: "url" | "verified", value: string | null) {
+  rules.value.sources[0] ??= { url: "", year: rules.value.year, verified: "" };
+  rules.value.sources[0][key] = value ?? "";
+}
 function selectYear(year: number) {
   if (rulesDirty.value || props.busy) return;
   const existing = props.state.rules.filter((r) => r.year === year).at(-1);
@@ -140,10 +150,12 @@ function saveRules() {
     // An unverified year can be saved as a draft; the engine still blocks issuing.
     if (
       rules.value.verified &&
-      (rules.value.sources.some(
-        (s) =>
-          !/^https:\/\//.test(s.url) || !/^\d{4}-\d{2}-\d{2}$/.test(s.verified),
-      ) ||
+      ((!props.state.company.demo && !rules.value.sources.length) ||
+        rules.value.sources.some(
+          (s) =>
+            !/^https:\/\//.test(s.url) ||
+            !/^\d{4}-\d{2}-\d{2}$/.test(s.verified),
+        ) ||
         !validAmount(rules.value.acCap, true) ||
         !validAmount(rules.value.laaCap, true))
     )
@@ -281,7 +293,13 @@ function saveRules() {
           <div>
             <h2>{{ tr("rules") }} · {{ rules.year }}</h2>
             <p class="hint">
-              {{ rules.year === 2026 ? tr("rulesHelp") : tr("manualYearHelp") }}
+              {{
+                state.company.demo
+                  ? tr("demoRulesHelp")
+                  : rules.year === 2026
+                    ? tr("rulesHelp")
+                    : tr("manualYearHelp")
+              }}
             </p>
           </div>
           <div class="inline-actions">
@@ -367,12 +385,14 @@ function saveRules() {
               inputmode="decimal"
             />
           </div>
-          <template v-if="rules.year !== 2026"
+          <template v-if="rules.year !== 2026 && !demoWithoutSources"
             ><Field
-              v-model="rules.sources[0]!.url"
+              :model-value="rules.sources[0]?.url ?? ''"
+              @update:model-value="setSource('url', $event)"
               :label="tr('sourceUrl')"
             /><Field
-              v-model="rules.sources[0]!.verified"
+              :model-value="rules.sources[0]?.verified ?? ''"
+              @update:model-value="setSource('verified', $event)"
               :label="tr('verifiedDate')"
               type="date"
             /><label class="check"
@@ -384,7 +404,9 @@ function saveRules() {
         </details>
         <details class="form-section">
           <summary>{{ tr("sources") }}</summary>
-          <p class="hint">{{ tr("sourceLimits") }}</p>
+          <p class="hint">
+            {{ tr(state.company.demo ? "demoRulesHelp" : "sourceLimits") }}
+          </p>
           <ul class="sources">
             <li v-for="s in rules.sources" :key="s.url">
               {{ s.url }} · {{ s.verified }}
