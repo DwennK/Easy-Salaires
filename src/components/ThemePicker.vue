@@ -2,13 +2,14 @@
 import { ref, watch } from "vue";
 import { tr } from "../lib/i18n";
 const themes = ["kiwi", "ocean", "lavender", "terracotta"];
-let stored = "kiwi";
+const defaultTheme = "ocean";
+let stored = defaultTheme;
 try {
-  stored = localStorage.getItem("easy-salaires-theme") || "kiwi";
+  stored = localStorage.getItem("easy-salaires-theme") || defaultTheme;
 } catch {
   /* Theme preference is optional. */
 }
-const selected = ref(themes.includes(stored) ? stored : "kiwi");
+const selected = ref(themes.includes(stored) ? stored : defaultTheme);
 watch(
   selected,
   (value) => {

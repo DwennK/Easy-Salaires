@@ -1,5 +1,10 @@
 /* V2: shared geometry, colour-only themes. */
-:root,
+:root {
+  --canvas: var(--paper);
+  color: var(--ink);
+  background: var(--paper);
+  font-size: 14px;
+}
 :root[data-theme="kiwi"] {
   --ink: #242a20;
   --muted: #62685d;
@@ -13,12 +18,9 @@
   --input: #f0f3e6;
   --hover: #edf1e3;
   --on-strong: #fffef9;
-  --canvas: var(--paper);
   --shadow: rgba(40, 47, 31, 0.07);
-  color: var(--ink);
-  background: var(--paper);
-  font-size: 14px;
 }
+:root,
 :root[data-theme="ocean"] {
   --ink: #202b35;
   --muted: #596b79;
