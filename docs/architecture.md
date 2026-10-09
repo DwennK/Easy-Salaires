@@ -2,7 +2,7 @@
 
 - `src/domain/` : types, valeurs par défaut datées, arithmétique décimale, calcul pur, workflow de préparation/révision et démonstration. Entrées monétaires en chaînes ; résultats finalisés en centimes.
 - `src/lib/documents.ts` : PDF A4 avec Noto Sans embarquée, fusion, AcroForm AFC, CSV et XLSX. Les documents consomment les résultats conservés, sans recalcul alternatif.
-- `src/lib/bridge.ts` : commandes natives et adaptateur web de démonstration IndexedDB. Aucun paiement réel ni réseau externe.
+- `src/lib/bridge.ts` : commandes natives et adaptateur web de démonstration IndexedDB. Aucun paiement réel. Les contrôles et téléchargements de mises à jour passent uniquement par le plugin natif Tauri updater vers GitHub.
 - `src/components/` : formulaires et panneaux ; `App.vue` coordonne les actions atomiques. Les écritures travaillent sur une copie, appliquée à l’UI après validation de la transaction SQLite. Les dialogs natifs sont dans Rust.
 - `src-tauri/src/storage.rs` : schéma normalisé pour employés, règles, paies, révisions et exports ; JSON versionné pour les instantanés métier ; PDF de révisions en BLOB. Unicité employé/mois, clés étrangères, triggers de révisions immuables, transaction globale avec compteur optimiste. Un seul fichier ouvert par instance et verrou OS conservé tant que la base est ouverte.
 - `src-tauri/migrations/` : migrations SQL numérotées. Version 1 = schéma initial ; toute autre version est refusée plutôt que modifiée implicitement. Pour introduire une migration ultérieure : valider la version source, faire une sauvegarde API SQLite avant migration, appliquer le SQL dans une transaction, contrôler les données, seulement ensuite remplacer la version. Les bases d’une version future ne doivent jamais être ouvertes en écriture par une version antérieure.
@@ -24,4 +24,10 @@ L’annuel projette douze mois. Les prévisions sont des copies en mémoire, exc
 Les thèmes sont des variables CSS de couleurs, avec structure et interactions identiques. La préférence est locale à l’appareil, sans données salariales.
 
 
-L’application sert ses ressources locales avec une CSP sans accès Internet et n’expose aucun plugin SQL, shell ou accès arbitraire au système de fichiers. Les sauvegardes et exports passent par des commandes spécifiques et des dialogues utilisateur. Un export ayant le même nom reçoit un suffixe, une sauvegarde existante est refusée.
+L’application sert ses ressources locales avec une CSP sans accès Internet depuis le frontend et n’expose aucun plugin SQL, shell ou accès arbitraire au système de fichiers. Les sauvegardes et exports passent par des commandes spécifiques et des dialogues utilisateur. Un export ayant le même nom reçoit un suffixe, une sauvegarde existante est refusée.
+
+## Mises à jour desktop
+
+`src/lib/updater.ts` gère la vérification, le téléchargement, l’installation et le redémarrage. Le composant `AppUpdater.vue` affiche l’état en bas du menu ; les erreurs réseau restent non bloquantes. Les écritures en cours et paramètres non enregistrés empêchent l’installation. La commande native `prepareUpdate` produit une sauvegarde SQLite cohérente du dossier ouvert avant le téléchargement. Les paquets et leur numéro de version sont vérifiés par la clé publique embarquée.
+
+GitHub Releases sert un manifeste `latest.json` avec seulement `darwin-aarch64` et `windows-x86_64`. La clé privée est conservée hors dépôt et dans un secret GitHub ; elle ne fait jamais partie du bundle. Le plugin process ne reçoit que la permission de redémarrer. Aucune donnée salariale ne participe aux requêtes de mise à jour.

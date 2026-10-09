@@ -1,6 +1,6 @@
 [package]
 name = "easy-salaires"
-version = "1.0.0"
+version = "0.1.0"
 description = "Offline Swiss payroll"
 edition = "2021"
 [lib]
@@ -19,6 +19,8 @@ chrono = "0.4"
 base64 = "0.22"
 open = "5"
 tempfile = "3"
+tauri-plugin-updater = "2.13.2"
+tauri-plugin-process = "2.4.0"
 
 # LLVM's debug-info stripping can misalign Mach-O proc macros on macOS 27.
 # These build-time libraries are never shipped in the application bundle.

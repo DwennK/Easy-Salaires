@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Easy Salaires",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "identifier": "ch.easysalaires.desktop",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -35,6 +35,22 @@
     ],
     "category": "Finance",
     "shortDescription": "Paie suisse locale pour microentreprises",
-    "macOS": { "minimumSystemVersion": "12.0" }
+    "macOS": {
+      "minimumSystemVersion": "12.0",
+      "signingIdentity": "-"
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDgyRTgxQUE2QzdDNjkwNTkKUldSWmtNYkhwaHJvZ293RlhqY1hwbFhqWHBlNS83ZEJkdVBEaVVqSWU0L2JDbGtCR2pqTlRWRmkK",
+      "endpoints": [
+        "https://github.com/DwennK/Easy-Salaires/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      },
+      "requireSignedVersion": true
+    }
   }
 }

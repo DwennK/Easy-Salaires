@@ -1,5 +1,6 @@
 import { ref } from "vue";
 import { v2Copy } from "./v2-copy";
+import { updateCopy } from "./update-copy";
 import { uiCopy } from "./ui-copy";
 import type { Lang } from "../domain/types";
 export const lang = ref<Lang>("fr");
@@ -591,7 +592,7 @@ const pairs: Record<string, [string, string]> = {
     "The demo insurance rates are fictional.",
   ],
 };
-Object.assign(pairs, uiCopy, v2Copy);
+Object.assign(pairs, uiCopy, v2Copy, updateCopy);
 export function tr(key: string, l: Lang = lang.value): string {
   if (key.startsWith("missing:")) {
     const [, rubric, side] = key.split(":");

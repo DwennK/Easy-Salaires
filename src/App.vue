@@ -80,6 +80,7 @@ import Field from "./components/Field.vue";
 import SetupGuide from "./components/SetupGuide.vue";
 import { availableYears, payrollAction, rulesReady } from "./lib/ux";
 import AnnualWorkspace from "./components/AnnualWorkspace.vue";
+import AppUpdater from "./components/AppUpdater.vue";
 import ThemePicker from "./components/ThemePicker.vue";
 import icon from "./assets/app-icon.png";
 const money = (value: number) => formatMoney(value, lang.value);
@@ -819,7 +820,16 @@ onMounted(() =>
         </button>
         <div class="local-status"><i></i>{{ tr("offline") }}</div>
         <ThemePicker />
-        <small>Easy Salaires <span>V2</span></small>
+        <AppUpdater
+          :blocked="
+            busy ||
+            !!settingsView?.dirty ||
+            !!employeeEdit ||
+            !!payrollEdit ||
+            createOpen ||
+            !!error
+          "
+        />
       </div>
     </aside>
     <div class="workspace">

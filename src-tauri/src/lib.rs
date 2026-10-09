@@ -273,6 +273,22 @@ async fn native(
             }
             Ok(json!(paths))
         }
+        "prepareUpdate" => {
+            let guard = state.db.lock().map_err(|e| e.to_string())?;
+            if let Some(db) = guard.as_ref() {
+                let root = backup
+                    .unwrap_or_else(|| db.path.parent().unwrap().join("Easy-Salaires-backups"));
+                let folder = root.join("before-updates");
+                fs::create_dir_all(&folder).map_err(|e| e.to_string())?;
+                let name = format!(
+                    "{}-{}.db",
+                    db.path.file_stem().unwrap().to_string_lossy(),
+                    chrono::Local::now().format("%Y%m%d-%H%M%S-%f")
+                );
+                db.backup(&folder.join(name))?;
+            }
+            Ok(Value::Null)
+        }
         "close" => {
             *state.db.lock().map_err(|e| e.to_string())? = None;
             Ok(Value::Null)
@@ -282,6 +298,8 @@ async fn native(
 }
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .setup(|app| {
             let dir = app.path().app_data_dir()?;
             fs::create_dir_all(&dir)?;
