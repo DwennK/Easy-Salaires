@@ -466,7 +466,8 @@ select:focus-visible {
   border-radius: 14px;
   background: var(--surface);
 }
-.year-grid {
+.year-grid,
+.annual-summary-grid {
   border-collapse: collapse;
   width: 100%;
   min-width: 850px;
@@ -474,7 +475,9 @@ select:focus-visible {
   font-size: 12px;
 }
 .year-grid th,
-.year-grid td {
+.year-grid td,
+.annual-summary-grid th,
+.annual-summary-grid td {
   padding: 9px 12px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
@@ -514,8 +517,17 @@ select:focus-visible {
 .year-grid tbody tr:last-child th {
   border-bottom: 0;
 }
-.year-grid td {
+.year-grid td,
+.annual-summary-grid td {
   height: 56px;
+}
+.annual-summary-grid thead th {
+  font-size: 10px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+.annual-summary-grid .text-button {
+  font-size: inherit;
 }
 .year-grid tbody th > small {
   display: block;
@@ -864,7 +876,8 @@ select:focus-visible {
   .year-grid td {
     height: 60px;
   }
-  .year-grid {
+  .year-grid,
+  .annual-summary-grid {
     font-size: 13px;
   }
   .year-overview {
@@ -1089,28 +1102,34 @@ select:focus-visible {
     padding: 18px 24px;
     margin-bottom: 18px;
   }
-  .year-grid td {
+  .year-grid td,
+  .annual-summary-grid td {
     height: 42px;
   }
   .year-grid th,
-  .year-grid td {
+  .year-grid td,
+  .annual-summary-grid th,
+  .annual-summary-grid td {
     padding-top: 5px;
     padding-bottom: 5px;
   }
   .year-grid tbody th {
     background: transparent;
   }
-  .year-grid thead th {
+  .year-grid thead th,
+  .annual-summary-grid thead th {
     padding-top: 11px;
     padding-bottom: 11px;
   }
   .year-grid tfoot th,
-  .year-grid tfoot td {
+  .year-grid tfoot td,
+  .annual-summary-grid tfoot td {
     padding-top: 12px;
     padding-bottom: 12px;
   }
   .year-grid .grid-input,
-  .year-grid .grid-edit-button {
+  .year-grid .grid-edit-button,
+  .annual-summary-grid .text-button {
     min-height: 28px;
     padding-top: 4px;
     padding-bottom: 4px;

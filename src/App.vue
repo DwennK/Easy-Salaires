@@ -1410,7 +1410,7 @@ onMounted(() =>
             <p>{{ missing.join(" · ") }}</p>
           </details>
           <div class="table-scroll" v-if="annual.length">
-            <table>
+            <table class="annual-summary-grid">
               <thead>
                 <tr>
                   <th>{{ tr("employee") }}</th>
