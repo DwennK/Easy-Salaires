@@ -149,7 +149,7 @@ async fn native(
         "save" => {
             let mut guard = state.db.lock().map_err(|e| e.to_string())?;
             let db = guard.as_mut().ok_or("noDatabase")?;
-            Ok(json!(db.save(&payload)?))
+            Ok(json!(db.save_with_backup(&payload, backup.as_deref())?))
         }
         "backupStatus" => {
             let guard = state.db.lock().map_err(|e| e.to_string())?;
@@ -206,7 +206,6 @@ async fn native(
             else {
                 return Ok(Value::Null);
             };
-            let source_db = Database::open(&source, false, backup.as_deref())?;
             let Some(dest) = rfd::FileDialog::new()
                 .add_filter("SQLite", &["db"])
                 .set_file_name("entreprise-restauree.db")
@@ -226,9 +225,7 @@ async fn native(
                 ));
                 old.backup(&safe)?;
             }
-            source_db.backup(&dest)?;
-            drop(source_db);
-            let restored = Database::open(&dest, false, backup.as_deref())?;
+            let restored = Database::restore(&source, &dest, backup.as_deref())?;
             let data = restored.load()?;
             recent(&state, &dest)?;
             *guard = Some(restored);

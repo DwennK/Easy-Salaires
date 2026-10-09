@@ -1,0 +1,10 @@
+PRAGMA application_id = 1163084115;
+CREATE TABLE meta(id INTEGER PRIMARY KEY CHECK(id=1), version INTEGER NOT NULL, company TEXT NOT NULL CHECK(json_valid(company)));
+CREATE TABLE employees(id TEXT PRIMARY KEY, data TEXT NOT NULL CHECK(json_valid(data)));
+CREATE TABLE rules(id TEXT PRIMARY KEY, data TEXT NOT NULL CHECK(json_valid(data)));
+CREATE TABLE payrolls(id TEXT PRIMARY KEY, employee_id TEXT NOT NULL REFERENCES employees(id), period TEXT NOT NULL CHECK(length(period)=7), data TEXT NOT NULL CHECK(json_valid(data)), UNIQUE(employee_id, period));
+CREATE TABLE revisions(id TEXT PRIMARY KEY, payroll_id TEXT NOT NULL REFERENCES payrolls(id), revision INTEGER NOT NULL CHECK(revision>0), data TEXT NOT NULL CHECK(json_valid(data)), pdf BLOB NOT NULL, UNIQUE(payroll_id, revision));
+CREATE TRIGGER immutable_revision BEFORE UPDATE ON revisions BEGIN SELECT RAISE(ABORT, 'Immutable revision'); END;
+CREATE TRIGGER preserve_revision BEFORE DELETE ON revisions BEGIN SELECT RAISE(ABORT, 'Immutable revision'); END;
+CREATE TABLE exports(id TEXT PRIMARY KEY, data TEXT NOT NULL CHECK(json_valid(data)));
+PRAGMA user_version = 1;

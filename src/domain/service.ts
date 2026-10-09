@@ -2,6 +2,7 @@ import type { State, Employee, Payroll, Rules, Terms, Revision } from "./types";
 import { clone, companyDefaults, preset2026, uid } from "./defaults";
 import { activeIn, applicable, calculate } from "./payroll";
 import { cents, d } from "./money";
+import { assertSupportedDataModel } from "./data-format";
 export const emptyState = (): State => ({
   company: companyDefaults(),
   employees: [],
@@ -180,6 +181,7 @@ function narrowOverrides(terms: Terms, rules: Rules | undefined): Terms {
   return next;
 }
 export function upgradeState(s: State): State {
+  assertSupportedDataModel(s);
   if (s.dataModel === 2 || s.company.modelVersion === 2) {
     s.dataModel = 2;
     return s;

@@ -1,5 +1,6 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import type { State } from "../domain/types";
+import { assertSupportedDataModel } from "../domain/data-format";
 export const native = isTauri();
 export const command = <T = unknown>(
   action: string,
@@ -24,6 +25,7 @@ export async function loadPreview(): Promise<State | null> {
   });
 }
 export async function persist(s: State): Promise<void> {
+  assertSupportedDataModel(s);
   if (native) {
     s.version = await command<number>("save", s);
     return;

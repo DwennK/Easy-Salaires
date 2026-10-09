@@ -1,0 +1,12 @@
+{
+  "dataModel": 2,
+  "persistedTypesSha256": "82ff4e2991508f7d3d3f48da4f3ad89351b74af064dca011539f1c7ce1bc8dc8",
+  "review": "Initial compatibility baseline: schema V1 upgrades to V2 metadata; legacy JSON model V1 upgrades to V2 while preserving payments and revision PDFs. Existing optional fields remain compatible.",
+  "immutable": {
+    "src-tauri/migrations/001_initial.sql": "0a5de91265a84f44dda1819180b1267f5b59a5dfc901e1fa64da61ee953d8d57",
+    "src-tauri/migrations/002_data_model.sql": "f6fdf4630814924cfc902a17c60109eaa8108387de253666a9db22878648b169",
+    "tests/fixtures/data/schema-v1.sql": "0a5de91265a84f44dda1819180b1267f5b59a5dfc901e1fa64da61ee953d8d57",
+    "tests/fixtures/data/model-v1.json": "178c30a7b7507d26ecd54655c7da45355dd520f2098155a553ed848acf81899b",
+    "tests/fixtures/data/model-v2.json": "1d7efb6f1a2160375417a5ccc84dc4521b366097e671ee84a1562d80a5560116"
+  }
+}

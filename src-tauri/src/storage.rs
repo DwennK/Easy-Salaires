@@ -1,6 +1,6 @@
 use base64::{engine::general_purpose::STANDARD, Engine};
 use fs2::FileExt;
-use rusqlite::{params, Connection};
+use rusqlite::{params, Connection, OpenFlags};
 use serde_json::{json, Value};
 use std::{
     fs::{self, File, OpenOptions},
@@ -10,6 +10,81 @@ use std::{
 };
 pub type Result<T> = std::result::Result<T, String>;
 const APP_ID: i64 = 1163084115;
+include!(concat!(env!("OUT_DIR"), "/migrations.rs"));
+fn latest_schema() -> i64 {
+    MIGRATIONS.len() as i64
+}
+fn latest_model() -> i64 {
+    serde_json::from_str::<Value>(include_str!("../../data-format.json"))
+        .expect("valid data-format.json")["dataModel"]
+        .as_i64()
+        .unwrap()
+}
+fn schema_version(conn: &Connection) -> Result<i64> {
+    conn.query_row("PRAGMA user_version", [], |r| r.get(0))
+        .map_err(err)
+}
+fn check_model(value: &Value) -> Result<i64> {
+    if value.is_null() {
+        return Ok(1);
+    }
+    let version = value.as_i64().ok_or("incompatibleDatabase")?;
+    if !(1..=latest_model()).contains(&version) {
+        return Err("incompatibleDatabase".into());
+    }
+    Ok(version)
+}
+fn data_model(conn: &Connection) -> Result<i64> {
+    let company: Option<String> = conn
+        .query_row("SELECT (SELECT company FROM meta WHERE id=1)", [], |r| {
+            r.get(0)
+        })
+        .map_err(err)?;
+    let legacy = match company {
+        Some(company) => {
+            check_model(&serde_json::from_str::<Value>(&company).map_err(err)?["modelVersion"])?
+        }
+        None => 1,
+    };
+    if schema_version(conn)? >= 2 {
+        let model: i64 = conn
+            .query_row("SELECT data_model FROM app_metadata WHERE id=1", [], |r| {
+                r.get(0)
+            })
+            .map_err(err)?;
+        Ok(check_model(&json!(model))?.max(legacy))
+    } else {
+        Ok(legacy)
+    }
+}
+// Snapshot through SQLite's backup API, including committed WAL pages.
+// Works on old supported formats: validation must not require the latest schema.
+fn snapshot(conn: &Connection, path: &Path) -> Result<()> {
+    if path.exists() {
+        return Err("fileExists".into());
+    }
+    let temp = tempfile::NamedTempFile::new_in(path.parent().ok_or("invalidFile")?).map_err(err)?;
+    conn.backup("main", temp.path(), None).map_err(err)?;
+    let copy = Connection::open(temp.path()).map_err(err)?;
+    copy.execute_batch("PRAGMA journal_mode=DELETE;")
+        .map_err(err)?;
+    validate(&copy)?;
+    drop(copy);
+    temp.as_file().sync_all().map_err(err)?;
+    temp.persist_noclobber(path).map_err(err)?;
+    Ok(())
+}
+fn apply_migrations(conn: &mut Connection, migrations: &[&str]) -> Result<()> {
+    let from = schema_version(conn)? as usize;
+    let tx = conn.transaction().map_err(err)?;
+    for (index, sql) in migrations.iter().enumerate().skip(from) {
+        tx.execute_batch(sql).map_err(err)?;
+        tx.pragma_update(None, "user_version", (index + 1) as i64)
+            .map_err(err)?;
+    }
+    validate(&tx)?;
+    tx.commit().map_err(err)
+}
 pub struct Database {
     pub conn: Connection,
     pub path: PathBuf,
@@ -25,7 +100,7 @@ pub fn validate(conn: &Connection) -> Result<()> {
     let ver: i64 = conn
         .query_row("PRAGMA user_version", [], |r| r.get(0))
         .map_err(err)?;
-    if app != APP_ID || ver != 1 {
+    if app != APP_ID || !(1..=latest_schema()).contains(&ver) {
         return Err("incompatibleDatabase".into());
     }
     let integrity: String = conn
@@ -42,6 +117,7 @@ pub fn validate(conn: &Connection) -> Result<()> {
     if foreign != 0 {
         return Err("corruptDatabase".into());
     }
+    data_model(conn)?;
     Ok(())
 }
 impl Database {
@@ -66,23 +142,39 @@ impl Database {
             .map_err(err)?;
         lock.try_lock_exclusive()
             .map_err(|_| "databaseAlreadyOpen".to_string())?;
-        let mut conn = Connection::open(&path).map_err(err)?;
+        // Read-only preflight: reject future or foreign files before any database write.
+        if !create {
+            let probe = Connection::open_with_flags(&path, OpenFlags::SQLITE_OPEN_READ_ONLY)
+                .map_err(err)?;
+            validate(&probe)?;
+        }
+        let mut conn = Connection::open_with_flags(
+            &path,
+            OpenFlags::SQLITE_OPEN_READ_WRITE
+                | if create {
+                    OpenFlags::SQLITE_OPEN_CREATE
+                } else {
+                    OpenFlags::empty()
+                },
+        )
+        .map_err(err)?;
         conn.busy_timeout(Duration::from_secs(3)).map_err(err)?;
         conn.execute_batch("PRAGMA foreign_keys=ON;").map_err(err)?;
         if create {
-            let tx = conn.transaction().map_err(err)?;
-            tx.execute_batch(include_str!("../migrations/001_initial.sql"))
-                .map_err(err)?;
-            tx.commit().map_err(err)?;
+            apply_migrations(&mut conn, MIGRATIONS)?;
         } else {
             validate(&conn)?;
         }
-        let db = Self {
+        let mut db = Self {
             conn,
             path,
             _lock: lock,
         };
         if !create {
+            if schema_version(&db.conn)? < latest_schema() {
+                db.before_migration(backup_dir)?;
+                apply_migrations(&mut db.conn, MIGRATIONS)?;
+            }
             db.daily_backup(backup_dir)?;
         }
         db.conn
@@ -91,21 +183,31 @@ impl Database {
         Ok(db)
     }
     pub fn backup(&self, path: &Path) -> Result<()> {
-        if path.exists() {
-            return Err("fileExists".into());
-        }
-        let temp =
-            tempfile::NamedTempFile::new_in(path.parent().ok_or("invalidFile")?).map_err(err)?;
-        self.conn.backup("main", temp.path(), None).map_err(err)?;
-        let copy = Connection::open(temp.path()).map_err(err)?;
-        // A portable backup must open without requiring WAL sidecars.
-        copy.execute_batch("PRAGMA journal_mode=DELETE;")
-            .map_err(err)?;
-        validate(&copy)?;
-        drop(copy);
-        temp.as_file().sync_all().map_err(err)?;
-        temp.persist_noclobber(path).map_err(err)?;
-        Ok(())
+        snapshot(&self.conn, path)
+    }
+    fn before_migration(&self, folder: Option<&Path>) -> Result<()> {
+        let root = folder
+            .map(Path::to_path_buf)
+            .unwrap_or_else(|| self.path.parent().unwrap().join("Easy-Salaires-backups"));
+        let folder = root.join("before-migrations");
+        fs::create_dir_all(&folder).map_err(err)?;
+        // Separate from daily retention; even repeated upgrades on the same day are protected.
+        let name = format!(
+            "{}-schema{}-model{}-{}.db",
+            self.path.file_stem().unwrap().to_string_lossy(),
+            schema_version(&self.conn)?,
+            data_model(&self.conn)?,
+            chrono::Local::now().format("%Y%m%d-%H%M%S-%f")
+        );
+        self.backup(&folder.join(name))
+    }
+    pub fn restore(source: &Path, dest: &Path, backup_dir: Option<&Path>) -> Result<Self> {
+        let source =
+            Connection::open_with_flags(source, OpenFlags::SQLITE_OPEN_READ_ONLY).map_err(err)?;
+        validate(&source)?;
+        snapshot(&source, dest)?;
+        drop(source);
+        Self::open(dest, false, backup_dir)
     }
     pub fn daily_backup(&self, folder: Option<&Path>) -> Result<()> {
         let root = folder
@@ -160,7 +262,7 @@ impl Database {
                 Ok((r.get(0)?, r.get(1)?))
             })
             .map_err(err)?;
-        let mut state = json!({"version":version,"company":serde_json::from_str::<Value>(&company).map_err(err)?});
+        let mut state = json!({"version":version,"dataModel":data_model(&self.conn)?,"company":serde_json::from_str::<Value>(&company).map_err(err)?});
         for table in ["employees", "rules", "payrolls", "exports"] {
             let mut stmt = self
                 .conn
@@ -191,7 +293,20 @@ impl Database {
         state["revisions"] = json!(revisions);
         Ok(Some(state))
     }
+    #[cfg(test)]
     pub fn save(&mut self, state: &Value) -> Result<i64> {
+        self.save_with_backup(state, None)
+    }
+    pub fn save_with_backup(&mut self, state: &Value, backup_dir: Option<&Path>) -> Result<i64> {
+        if schema_version(&self.conn)? != latest_schema() {
+            return Err("incompatibleDatabase".into());
+        }
+        let model =
+            check_model(&state["dataModel"])?.max(check_model(&state["company"]["modelVersion"])?);
+        let current_model = data_model(&self.conn)?;
+        if model < current_model {
+            return Err("incompatibleDatabase".into());
+        }
         let expected = state["version"].as_i64().ok_or("invalidState")?;
         if !state["company"].is_object() {
             return Err("invalidState".into());
@@ -200,6 +315,9 @@ impl Database {
             if !state[name].is_array() {
                 return Err("invalidState".into());
             }
+        }
+        if model > current_model {
+            self.before_migration(backup_dir)?;
         }
         let tx = self.conn.transaction().map_err(err)?;
         let current: i64 = tx
@@ -212,6 +330,8 @@ impl Database {
         if current != expected {
             return Err("staleState".into());
         }
+        tx.execute("UPDATE app_metadata SET data_model=?1 WHERE id=1", [model])
+            .map_err(err)?;
         tx.execute("INSERT INTO meta VALUES(1,?1,?2) ON CONFLICT(id) DO UPDATE SET version=excluded.version, company=excluded.company",params![current+1,state["company"].to_string()]).map_err(err)?;
         for table in ["employees", "rules", "exports"] {
             for row in state[table].as_array().unwrap() {
@@ -276,7 +396,194 @@ impl Database {
 mod tests {
     use super::*;
     fn state() -> Value {
-        json!({"version":0,"company":{"name":"Test"},"employees":[{"id":"e"}],"rules":[],"payrolls":[{"id":"p","employeeId":"e","period":"2026-01"}],"revisions":[],"exports":[]})
+        json!({"version":0,"dataModel":1,"company":{"name":"Test"},"employees":[{"id":"e"}],"rules":[],"payrolls":[{"id":"p","employeeId":"e","period":"2026-01"}],"revisions":[],"exports":[]})
+    }
+    fn legacy(path: &Path) -> Value {
+        let conn = Connection::open(path).unwrap();
+        conn.execute_batch(include_str!("../../tests/fixtures/data/schema-v1.sql"))
+            .unwrap();
+        let s: Value =
+            serde_json::from_str(include_str!("../../tests/fixtures/data/model-v1.json")).unwrap();
+        conn.execute(
+            "INSERT INTO meta VALUES(1,?1,?2)",
+            params![s["version"].as_i64().unwrap(), s["company"].to_string()],
+        )
+        .unwrap();
+        for table in ["employees", "rules", "exports"] {
+            for row in s[table].as_array().unwrap() {
+                conn.execute(
+                    &format!("INSERT INTO {table} VALUES(?1,?2)"),
+                    params![row["id"].as_str().unwrap(), row.to_string()],
+                )
+                .unwrap();
+            }
+        }
+        for row in s["payrolls"].as_array().unwrap() {
+            conn.execute(
+                "INSERT INTO payrolls VALUES(?1,?2,?3,?4)",
+                params![
+                    row["id"].as_str().unwrap(),
+                    row["employeeId"].as_str().unwrap(),
+                    row["period"].as_str().unwrap(),
+                    row.to_string()
+                ],
+            )
+            .unwrap();
+        }
+        for row in s["revisions"].as_array().unwrap() {
+            let mut row = row.clone();
+            let pdf = STANDARD.decode(row["pdf"].as_str().unwrap()).unwrap();
+            row.as_object_mut().unwrap().remove("pdf");
+            conn.execute(
+                "INSERT INTO revisions VALUES(?1,?2,?3,?4,?5)",
+                params![
+                    row["id"].as_str().unwrap(),
+                    row["payrollId"].as_str().unwrap(),
+                    row["number"].as_i64().unwrap(),
+                    row.to_string(),
+                    pdf
+                ],
+            )
+            .unwrap();
+        }
+        s
+    }
+    #[test]
+    fn every_historical_schema_opens_without_losing_data_and_is_idempotent() {
+        for version in 1..=MIGRATIONS.len() {
+            let tmp = tempfile::tempdir().unwrap();
+            let path = tmp.path().join("historical.db");
+            let mut expected = legacy(&path);
+            expected["dataModel"] = json!(1);
+            let conn = Connection::open(&path).unwrap();
+            for (index, sql) in MIGRATIONS.iter().enumerate().take(version).skip(1) {
+                conn.execute_batch(sql).unwrap();
+                conn.pragma_update(None, "user_version", (index + 1) as i64)
+                    .unwrap();
+            }
+            drop(conn);
+            let db = Database::open(&path, false, None).unwrap();
+            assert_eq!(schema_version(&db.conn).unwrap(), latest_schema());
+            assert_eq!(db.load().unwrap().unwrap(), expected);
+            let backups = tmp.path().join("Easy-Salaires-backups/before-migrations");
+            if version < MIGRATIONS.len() {
+                let files: Vec<_> = fs::read_dir(&backups)
+                    .unwrap()
+                    .map(|p| p.unwrap().path())
+                    .collect();
+                assert_eq!(files.len(), 1);
+                let original =
+                    Connection::open_with_flags(&files[0], OpenFlags::SQLITE_OPEN_READ_ONLY)
+                        .unwrap();
+                assert_eq!(schema_version(&original).unwrap(), version as i64);
+            }
+            drop(db);
+            let reopened = Database::open(&path, false, None).unwrap();
+            assert_eq!(reopened.load().unwrap().unwrap(), expected);
+            if backups.exists() {
+                assert_eq!(fs::read_dir(backups).unwrap().count(), 1);
+            }
+        }
+    }
+    #[test]
+    fn restores_old_backup_without_touching_source_even_in_wal_mode() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("source.db");
+        let mut expected = legacy(&path);
+        expected["dataModel"] = json!(1);
+        let conn = Connection::open(&path).unwrap();
+        conn.execute_batch("PRAGMA journal_mode=WAL;").unwrap();
+        expected["company"]["name"] = json!("Committed WAL data");
+        conn.execute(
+            "UPDATE meta SET company=?1",
+            [expected["company"].to_string()],
+        )
+        .unwrap();
+        let bytes = fs::read(&path).unwrap();
+        let dest = tmp.path().join("restored.db");
+        let restored = Database::restore(&path, &dest, None).unwrap();
+        assert_eq!(restored.load().unwrap().unwrap(), expected);
+        assert_eq!(fs::read(&path).unwrap(), bytes);
+        assert_eq!(schema_version(&conn).unwrap(), 1);
+        assert!(Database::restore(&path, &dest, None).is_err());
+    }
+    #[test]
+    fn backup_failure_aborts_before_schema_changes() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("legacy.db");
+        legacy(&path);
+        let bytes = fs::read(&path).unwrap();
+        let blocked = tmp.path().join("not-a-directory");
+        fs::write(&blocked, "blocked").unwrap();
+        assert!(Database::open(&path, false, Some(&blocked)).is_err());
+        assert_eq!(fs::read(&path).unwrap(), bytes);
+    }
+    #[test]
+    fn failed_migration_rolls_back_all_steps_and_version() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("legacy.db");
+        legacy(&path);
+        let mut conn = Connection::open(&path).unwrap();
+        let broken = [
+            MIGRATIONS[0],
+            "CREATE TABLE attempted(id INTEGER);",
+            "INSERT INTO missing_table VALUES(1);",
+        ];
+        assert!(apply_migrations(&mut conn, &broken).is_err());
+        assert_eq!(schema_version(&conn).unwrap(), 1);
+        assert!(conn.prepare("SELECT * FROM attempted").is_err());
+        validate(&conn).unwrap();
+    }
+    #[test]
+    fn rejects_future_schema_and_json_without_changing_source() {
+        for future_schema in [true, false] {
+            let tmp = tempfile::tempdir().unwrap();
+            let path = tmp.path().join("future.db");
+            legacy(&path);
+            let conn = Connection::open(&path).unwrap();
+            if future_schema {
+                conn.pragma_update(None, "user_version", latest_schema() + 1)
+                    .unwrap();
+            } else {
+                conn.execute(
+                    "UPDATE meta SET company=json_set(company, '$.modelVersion', ?1)",
+                    [latest_model() + 1],
+                )
+                .unwrap();
+            }
+            drop(conn);
+            let bytes = fs::read(&path).unwrap();
+            assert!(Database::open(&path, false, None).is_err());
+            assert!(Database::restore(&path, &tmp.path().join("copy.db"), None).is_err());
+            assert!(!tmp.path().join("copy.db").exists());
+            assert_eq!(fs::read(&path).unwrap(), bytes);
+        }
+    }
+    #[test]
+    fn model_upgrade_has_dedicated_backup_and_rejects_downgrades() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut db = Database::open(&tmp.path().join("model.db"), true, None).unwrap();
+        let mut s = state();
+        s["version"] = json!(db.save(&s).unwrap());
+        s["dataModel"] = json!(latest_model());
+        let blocked = tmp.path().join("blocked");
+        fs::write(&blocked, "blocked").unwrap();
+        assert!(db.save_with_backup(&s, Some(&blocked)).is_err());
+        assert_eq!(db.load().unwrap().unwrap()["dataModel"], 1);
+        let folder = tmp.path().join("configured-backups");
+        s["version"] = json!(db.save_with_backup(&s, Some(&folder)).unwrap());
+        assert_eq!(db.load().unwrap().unwrap(), s);
+        let files: Vec<_> = fs::read_dir(folder.join("before-migrations"))
+            .unwrap()
+            .map(|p| p.unwrap().path())
+            .collect();
+        assert_eq!(files.len(), 1);
+        let old = Connection::open(&files[0]).unwrap();
+        assert_eq!(data_model(&old).unwrap(), 1);
+        s["dataModel"] = json!(1);
+        assert!(db.save(&s).is_err());
+        s["dataModel"] = json!(latest_model() + 1);
+        assert!(db.save(&s).is_err());
     }
     #[test]
     fn persistence_backup_and_lock() {

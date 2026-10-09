@@ -1,0 +1,947 @@
+{
+  "company": {
+    "name": "Atelier du Lac Sàrl",
+    "address": "Rue du Seyon 12",
+    "postal": "2000",
+    "city": "Neuchâtel",
+    "canton": "NE",
+    "country": "CH",
+    "uid": "",
+    "contact": "032 555 01 24",
+    "responsible": "Camille Favre",
+    "footer": "Merci pour votre travail.",
+    "logo": "",
+    "lang": "fr",
+    "demo": false,
+    "modelVersion": 2
+  },
+  "employees": [
+    {
+      "id": "581e1270-f165-4e01-9ced-3a9230b3c674",
+      "firstName": "Camille",
+      "lastName": "Favre",
+      "address": "Avenue du Premier-Mars 8",
+      "postal": "2000",
+      "city": "Neuchâtel",
+      "birthDate": "1985-04-12",
+      "avs": "",
+      "iban": "",
+      "start": "2024-01-01",
+      "end": "",
+      "role": "owner",
+      "archived": false,
+      "terms": [
+        {
+          "id": "6871e13a-77ab-47e8-af73-c143a912f2d4",
+          "effective": "2024-01",
+          "mode": "monthly",
+          "salary": "5200",
+          "activity": "100",
+          "weeklyHours": "42",
+          "workDays": "5",
+          "avsStatus": "standard",
+          "exemptionReason": "",
+          "lpp": true,
+          "lppEmployee": "245",
+          "lppEmployer": "245",
+          "thirteen": false,
+          "thirteenMonth": 12,
+          "thirteenBase": "base",
+          "family": false,
+          "familyAmount": null,
+          "vacation": false,
+          "vacationRate": null,
+          "vacationBase": "base",
+          "holiday": false,
+          "holidayRate": null,
+          "holidayBase": "base",
+          "overrides": []
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "ebf46da7-d473-462b-a18a-831661b47c42",
+      "year": 2026,
+      "effective": "2026-01",
+      "verified": true,
+      "acCap": "148200",
+      "laaCap": "148200",
+      "sources": [
+        {
+          "url": "https://www.ahv-iv.ch/p/2.01.f",
+          "year": 2026,
+          "verified": "2026-10-08"
+        },
+        {
+          "url": "https://www.ahv-iv.ch/p/2.08.f",
+          "year": 2026,
+          "verified": "2026-10-08"
+        },
+        {
+          "url": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html",
+          "year": 2026,
+          "verified": "2026-10-08"
+        },
+        {
+          "url": "https://www.suva.ch/fr-ch/assurance/assurance-accidents/assurance-accidents-laa",
+          "year": 2026,
+          "verified": "2026-10-08"
+        }
+      ],
+      "contributions": [
+        {
+          "id": "avs",
+          "label": "avs",
+          "active": true,
+          "kind": "percent",
+          "base": "avs",
+          "employee": "5.3",
+          "employer": "5.3",
+          "source": "https://www.ahv-iv.ch/p/2.01.f"
+        },
+        {
+          "id": "ac",
+          "label": "ac",
+          "active": true,
+          "kind": "percent",
+          "base": "ac",
+          "employee": "1.1",
+          "employer": "1.1",
+          "source": "https://www.ahv-iv.ch/p/2.08.f"
+        },
+        {
+          "id": "af",
+          "label": "af",
+          "active": true,
+          "kind": "percent",
+          "base": "avs",
+          "employee": "0",
+          "employer": "1.8",
+          "source": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html"
+        },
+        {
+          "id": "lfapp",
+          "label": "lfapp",
+          "active": true,
+          "kind": "percent",
+          "base": "avs",
+          "employee": "0",
+          "employer": "0.507",
+          "source": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html"
+        },
+        {
+          "id": "lae",
+          "label": "lae",
+          "active": true,
+          "kind": "percent",
+          "base": "avs",
+          "employee": "0",
+          "employer": "0.18",
+          "source": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html"
+        },
+        {
+          "id": "admin",
+          "label": "admin",
+          "active": true,
+          "kind": "percent",
+          "base": "avsContributions",
+          "employee": "0",
+          "employer": "1.8",
+          "source": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html"
+        },
+        {
+          "id": "aap",
+          "label": "aap",
+          "active": true,
+          "kind": "percent",
+          "base": "laa",
+          "employee": "0",
+          "employer": "0.8",
+          "source": "contract"
+        },
+        {
+          "id": "aanp",
+          "label": "aanp",
+          "active": true,
+          "kind": "percent",
+          "base": "laa",
+          "employee": "1.2",
+          "employer": "0",
+          "source": "contract"
+        },
+        {
+          "id": "ijm",
+          "label": "ijm",
+          "active": false,
+          "kind": "percent",
+          "base": "salary",
+          "employee": null,
+          "employer": null,
+          "source": "contract"
+        }
+      ]
+    }
+  ],
+  "payrolls": [
+    {
+      "id": "8cac997b-557f-4160-b544-2c90aa7a3024",
+      "employeeId": "581e1270-f165-4e01-9ced-3a9230b3c674",
+      "period": "2026-01",
+      "employee": {
+        "id": "581e1270-f165-4e01-9ced-3a9230b3c674",
+        "firstName": "Camille",
+        "lastName": "Favre",
+        "address": "Avenue du Premier-Mars 8",
+        "postal": "2000",
+        "city": "Neuchâtel",
+        "birthDate": "1985-04-12",
+        "avs": "",
+        "iban": "",
+        "start": "2024-01-01",
+        "end": "",
+        "role": "owner",
+        "archived": false,
+        "terms": [
+          {
+            "id": "6871e13a-77ab-47e8-af73-c143a912f2d4",
+            "effective": "2024-01",
+            "mode": "monthly",
+            "salary": "5200",
+            "activity": "100",
+            "weeklyHours": "42",
+            "workDays": "5",
+            "avsStatus": "standard",
+            "exemptionReason": "",
+            "lpp": true,
+            "lppEmployee": "245",
+            "lppEmployer": "245",
+            "thirteen": false,
+            "thirteenMonth": 12,
+            "thirteenBase": "base",
+            "family": false,
+            "familyAmount": null,
+            "vacation": false,
+            "vacationRate": null,
+            "vacationBase": "base",
+            "holiday": false,
+            "holidayRate": null,
+            "holidayBase": "base",
+            "overrides": []
+          }
+        ]
+      },
+      "company": {
+        "name": "Atelier du Lac Sàrl",
+        "address": "Rue du Seyon 12",
+        "postal": "2000",
+        "city": "Neuchâtel",
+        "canton": "NE",
+        "country": "CH",
+        "uid": "",
+        "contact": "032 555 01 24",
+        "responsible": "Camille Favre",
+        "footer": "Merci pour votre travail.",
+        "logo": "",
+        "lang": "fr",
+        "demo": false,
+        "modelVersion": 2
+      },
+      "terms": {
+        "id": "6871e13a-77ab-47e8-af73-c143a912f2d4",
+        "effective": "2024-01",
+        "mode": "monthly",
+        "salary": "6100",
+        "activity": "100",
+        "weeklyHours": "42",
+        "workDays": "5",
+        "avsStatus": "standard",
+        "exemptionReason": "",
+        "lpp": true,
+        "lppEmployee": "245",
+        "lppEmployer": "245",
+        "thirteen": false,
+        "thirteenMonth": 12,
+        "thirteenBase": "base",
+        "family": false,
+        "familyAmount": null,
+        "vacation": false,
+        "vacationRate": null,
+        "vacationBase": "base",
+        "holiday": false,
+        "holidayRate": null,
+        "holidayBase": "base",
+        "overrides": []
+      },
+      "rules": {
+        "id": "ebf46da7-d473-462b-a18a-831661b47c42",
+        "year": 2026,
+        "effective": "2026-01",
+        "verified": true,
+        "acCap": "148200",
+        "laaCap": "148200",
+        "sources": [
+          {
+            "url": "https://www.ahv-iv.ch/p/2.01.f",
+            "year": 2026,
+            "verified": "2026-10-08"
+          },
+          {
+            "url": "https://www.ahv-iv.ch/p/2.08.f",
+            "year": 2026,
+            "verified": "2026-10-08"
+          },
+          {
+            "url": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html",
+            "year": 2026,
+            "verified": "2026-10-08"
+          },
+          {
+            "url": "https://www.suva.ch/fr-ch/assurance/assurance-accidents/assurance-accidents-laa",
+            "year": 2026,
+            "verified": "2026-10-08"
+          }
+        ],
+        "contributions": [
+          {
+            "id": "avs",
+            "label": "avs",
+            "active": true,
+            "kind": "percent",
+            "base": "avs",
+            "employee": "5.3",
+            "employer": "5.3",
+            "source": "https://www.ahv-iv.ch/p/2.01.f"
+          },
+          {
+            "id": "ac",
+            "label": "ac",
+            "active": true,
+            "kind": "percent",
+            "base": "ac",
+            "employee": "1.1",
+            "employer": "1.1",
+            "source": "https://www.ahv-iv.ch/p/2.08.f"
+          },
+          {
+            "id": "af",
+            "label": "af",
+            "active": true,
+            "kind": "percent",
+            "base": "avs",
+            "employee": "0",
+            "employer": "1.8",
+            "source": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html"
+          },
+          {
+            "id": "lfapp",
+            "label": "lfapp",
+            "active": true,
+            "kind": "percent",
+            "base": "avs",
+            "employee": "0",
+            "employer": "0.507",
+            "source": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html"
+          },
+          {
+            "id": "lae",
+            "label": "lae",
+            "active": true,
+            "kind": "percent",
+            "base": "avs",
+            "employee": "0",
+            "employer": "0.18",
+            "source": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html"
+          },
+          {
+            "id": "admin",
+            "label": "admin",
+            "active": true,
+            "kind": "percent",
+            "base": "avsContributions",
+            "employee": "0",
+            "employer": "1.8",
+            "source": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html"
+          },
+          {
+            "id": "aap",
+            "label": "aap",
+            "active": true,
+            "kind": "percent",
+            "base": "laa",
+            "employee": "0",
+            "employer": "0.8",
+            "source": "contract"
+          },
+          {
+            "id": "aanp",
+            "label": "aanp",
+            "active": true,
+            "kind": "percent",
+            "base": "laa",
+            "employee": "1.2",
+            "employer": "0",
+            "source": "contract"
+          },
+          {
+            "id": "ijm",
+            "label": "ijm",
+            "active": false,
+            "kind": "percent",
+            "base": "salary",
+            "employee": null,
+            "employer": null,
+            "source": "contract"
+          }
+        ]
+      },
+      "input": {
+        "hours": null,
+        "elements": [],
+        "prorata": null,
+        "prorataReason": "",
+        "note": ""
+      },
+      "result": {
+        "lines": [
+          {
+            "id": "monthlySalary",
+            "label": "monthlySalary",
+            "amount": 610000,
+            "employer": 0,
+            "base": "6100",
+            "quantity": "1.00000000",
+            "rate": "",
+            "category": "earning",
+            "origin": "contract",
+            "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+          },
+          {
+            "id": "avs",
+            "label": "avs",
+            "amount": 32330,
+            "employer": 32330,
+            "base": "6100.00",
+            "quantity": "1",
+            "rate": "5.3",
+            "category": "contribution",
+            "origin": "https://www.ahv-iv.ch/p/2.01.f",
+            "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+          },
+          {
+            "id": "ac",
+            "label": "ac",
+            "amount": 6710,
+            "employer": 6710,
+            "base": "6100.00",
+            "quantity": "1",
+            "rate": "1.1",
+            "category": "contribution",
+            "origin": "https://www.ahv-iv.ch/p/2.08.f",
+            "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+          },
+          {
+            "id": "af",
+            "label": "af",
+            "amount": 0,
+            "employer": 10980,
+            "base": "6100.00",
+            "quantity": "1",
+            "rate": "0",
+            "category": "contribution",
+            "origin": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html",
+            "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+          },
+          {
+            "id": "lfapp",
+            "label": "lfapp",
+            "amount": 0,
+            "employer": 3093,
+            "base": "6100.00",
+            "quantity": "1",
+            "rate": "0",
+            "category": "contribution",
+            "origin": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html",
+            "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+          },
+          {
+            "id": "lae",
+            "label": "lae",
+            "amount": 0,
+            "employer": 1098,
+            "base": "6100.00",
+            "quantity": "1",
+            "rate": "0",
+            "category": "contribution",
+            "origin": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html",
+            "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+          },
+          {
+            "id": "admin",
+            "label": "admin",
+            "amount": 0,
+            "employer": 1164,
+            "base": "646.60",
+            "quantity": "1",
+            "rate": "0",
+            "category": "contribution",
+            "origin": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html",
+            "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+          },
+          {
+            "id": "aap",
+            "label": "aap",
+            "amount": 0,
+            "employer": 4880,
+            "base": "6100.00",
+            "quantity": "1",
+            "rate": "0",
+            "category": "contribution",
+            "origin": "contract",
+            "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+          },
+          {
+            "id": "aanp",
+            "label": "aanp",
+            "amount": 7320,
+            "employer": 0,
+            "base": "6100.00",
+            "quantity": "1",
+            "rate": "1.2",
+            "category": "contribution",
+            "origin": "contract",
+            "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+          },
+          {
+            "id": "lpp",
+            "label": "lpp",
+            "amount": 24500,
+            "employer": 24500,
+            "base": "",
+            "quantity": "1",
+            "rate": "",
+            "category": "contribution",
+            "origin": "pensionStatement",
+            "ruleVersion": "6871e13a-77ab-47e8-af73-c143a912f2d4"
+          }
+        ],
+        "gross": 610000,
+        "deductions": 70860,
+        "reimbursements": 0,
+        "net": 539140,
+        "employer": 84755,
+        "cost": 694755,
+        "salary": 610000,
+        "avsBase": 610000,
+        "acBase": 610000,
+        "laaBase": 610000,
+        "laaEarnings": 610000,
+        "accrual": "0.000000000000",
+        "thirteenPaid": 0,
+        "thirteenBalance": "0.000000000000",
+        "errors": [],
+        "warnings": [],
+        "prorata": "1.00000000"
+      },
+      "paidDate": "2026-01-28",
+      "paymentReview": true,
+      "needsReview": false,
+      "issued": false,
+      "updated": "2026-10-09T10:02:33.979Z",
+      "termOverrides": {
+        "salary": "6100"
+      },
+      "paidAmount": 455980
+    }
+  ],
+  "revisions": [
+    {
+      "id": "2fda282b-d381-40bf-9268-e7f507168148",
+      "payrollId": "8cac997b-557f-4160-b544-2c90aa7a3024",
+      "number": 1,
+      "created": "2026-10-09T09:56:37.429Z",
+      "lang": "fr",
+      "snapshot": {
+        "id": "8cac997b-557f-4160-b544-2c90aa7a3024",
+        "employeeId": "581e1270-f165-4e01-9ced-3a9230b3c674",
+        "period": "2026-01",
+        "employee": {
+          "id": "581e1270-f165-4e01-9ced-3a9230b3c674",
+          "firstName": "Camille",
+          "lastName": "Favre",
+          "address": "Avenue du Premier-Mars 8",
+          "postal": "2000",
+          "city": "Neuchâtel",
+          "birthDate": "1985-04-12",
+          "avs": "",
+          "iban": "",
+          "start": "2024-01-01",
+          "end": "",
+          "role": "owner",
+          "archived": false,
+          "terms": [
+            {
+              "id": "6871e13a-77ab-47e8-af73-c143a912f2d4",
+              "effective": "2024-01",
+              "mode": "monthly",
+              "salary": "5200",
+              "activity": "100",
+              "weeklyHours": "42",
+              "workDays": "5",
+              "avsStatus": "standard",
+              "exemptionReason": "",
+              "lpp": true,
+              "lppEmployee": "245",
+              "lppEmployer": "245",
+              "thirteen": false,
+              "thirteenMonth": 12,
+              "thirteenBase": "base",
+              "family": false,
+              "familyAmount": null,
+              "vacation": false,
+              "vacationRate": null,
+              "vacationBase": "base",
+              "holiday": false,
+              "holidayRate": null,
+              "holidayBase": "base",
+              "overrides": []
+            }
+          ]
+        },
+        "company": {
+          "name": "Atelier du Lac Sàrl",
+          "address": "Rue du Seyon 12",
+          "postal": "2000",
+          "city": "Neuchâtel",
+          "canton": "NE",
+          "country": "CH",
+          "uid": "",
+          "contact": "032 555 01 24",
+          "responsible": "Camille Favre",
+          "footer": "Merci pour votre travail.",
+          "logo": "",
+          "lang": "fr",
+          "demo": true,
+          "demoHistoryVersion": 1
+        },
+        "terms": {
+          "id": "6871e13a-77ab-47e8-af73-c143a912f2d4",
+          "effective": "2024-01",
+          "mode": "monthly",
+          "salary": "6100",
+          "activity": "100",
+          "weeklyHours": "42",
+          "workDays": "5",
+          "avsStatus": "standard",
+          "exemptionReason": "",
+          "lpp": true,
+          "lppEmployee": "245",
+          "lppEmployer": "245",
+          "thirteen": false,
+          "thirteenMonth": 12,
+          "thirteenBase": "base",
+          "family": false,
+          "familyAmount": null,
+          "vacation": false,
+          "vacationRate": null,
+          "vacationBase": "base",
+          "holiday": false,
+          "holidayRate": null,
+          "holidayBase": "base",
+          "overrides": []
+        },
+        "rules": {
+          "id": "ebf46da7-d473-462b-a18a-831661b47c42",
+          "year": 2026,
+          "effective": "2026-01",
+          "verified": true,
+          "acCap": "148200",
+          "laaCap": "148200",
+          "sources": [
+            {
+              "url": "https://www.ahv-iv.ch/p/2.01.f",
+              "year": 2026,
+              "verified": "2026-10-08"
+            },
+            {
+              "url": "https://www.ahv-iv.ch/p/2.08.f",
+              "year": 2026,
+              "verified": "2026-10-08"
+            },
+            {
+              "url": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html",
+              "year": 2026,
+              "verified": "2026-10-08"
+            },
+            {
+              "url": "https://www.suva.ch/fr-ch/assurance/assurance-accidents/assurance-accidents-laa",
+              "year": 2026,
+              "verified": "2026-10-08"
+            }
+          ],
+          "contributions": [
+            {
+              "id": "avs",
+              "label": "avs",
+              "active": true,
+              "kind": "percent",
+              "base": "avs",
+              "employee": "5.3",
+              "employer": "5.3",
+              "source": "https://www.ahv-iv.ch/p/2.01.f"
+            },
+            {
+              "id": "ac",
+              "label": "ac",
+              "active": true,
+              "kind": "percent",
+              "base": "ac",
+              "employee": "1.1",
+              "employer": "1.1",
+              "source": "https://www.ahv-iv.ch/p/2.08.f"
+            },
+            {
+              "id": "af",
+              "label": "af",
+              "active": true,
+              "kind": "percent",
+              "base": "avs",
+              "employee": "0",
+              "employer": "1.8",
+              "source": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html"
+            },
+            {
+              "id": "lfapp",
+              "label": "lfapp",
+              "active": true,
+              "kind": "percent",
+              "base": "avs",
+              "employee": "0",
+              "employer": "0.507",
+              "source": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html"
+            },
+            {
+              "id": "lae",
+              "label": "lae",
+              "active": true,
+              "kind": "percent",
+              "base": "avs",
+              "employee": "0",
+              "employer": "0.18",
+              "source": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html"
+            },
+            {
+              "id": "admin",
+              "label": "admin",
+              "active": true,
+              "kind": "percent",
+              "base": "avsContributions",
+              "employee": "0",
+              "employer": "1.8",
+              "source": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html"
+            },
+            {
+              "id": "aap",
+              "label": "aap",
+              "active": true,
+              "kind": "percent",
+              "base": "laa",
+              "employee": "0",
+              "employer": "0.8",
+              "source": "contract"
+            },
+            {
+              "id": "aanp",
+              "label": "aanp",
+              "active": true,
+              "kind": "percent",
+              "base": "laa",
+              "employee": "1.2",
+              "employer": "0",
+              "source": "contract"
+            },
+            {
+              "id": "ijm",
+              "label": "ijm",
+              "active": false,
+              "kind": "percent",
+              "base": "salary",
+              "employee": null,
+              "employer": null,
+              "source": "contract"
+            }
+          ]
+        },
+        "input": {
+          "hours": null,
+          "elements": [],
+          "prorata": null,
+          "prorataReason": "",
+          "note": ""
+        },
+        "result": {
+          "lines": [
+            {
+              "id": "monthlySalary",
+              "label": "monthlySalary",
+              "amount": 520000,
+              "employer": 0,
+              "base": "5200",
+              "quantity": "1.00000000",
+              "rate": "",
+              "category": "earning",
+              "origin": "contract",
+              "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+            },
+            {
+              "id": "avs",
+              "label": "avs",
+              "amount": 27560,
+              "employer": 27560,
+              "base": "5200.00",
+              "quantity": "1",
+              "rate": "5.3",
+              "category": "contribution",
+              "origin": "https://www.ahv-iv.ch/p/2.01.f",
+              "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+            },
+            {
+              "id": "ac",
+              "label": "ac",
+              "amount": 5720,
+              "employer": 5720,
+              "base": "5200.00",
+              "quantity": "1",
+              "rate": "1.1",
+              "category": "contribution",
+              "origin": "https://www.ahv-iv.ch/p/2.08.f",
+              "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+            },
+            {
+              "id": "af",
+              "label": "af",
+              "amount": 0,
+              "employer": 9360,
+              "base": "5200.00",
+              "quantity": "1",
+              "rate": "0",
+              "category": "contribution",
+              "origin": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html",
+              "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+            },
+            {
+              "id": "lfapp",
+              "label": "lfapp",
+              "amount": 0,
+              "employer": 2636,
+              "base": "5200.00",
+              "quantity": "1",
+              "rate": "0",
+              "category": "contribution",
+              "origin": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html",
+              "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+            },
+            {
+              "id": "lae",
+              "label": "lae",
+              "amount": 0,
+              "employer": 936,
+              "base": "5200.00",
+              "quantity": "1",
+              "rate": "0",
+              "category": "contribution",
+              "origin": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html",
+              "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+            },
+            {
+              "id": "admin",
+              "label": "admin",
+              "amount": 0,
+              "employer": 992,
+              "base": "551.20",
+              "quantity": "1",
+              "rate": "0",
+              "category": "contribution",
+              "origin": "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html",
+              "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+            },
+            {
+              "id": "aap",
+              "label": "aap",
+              "amount": 0,
+              "employer": 4160,
+              "base": "5200.00",
+              "quantity": "1",
+              "rate": "0",
+              "category": "contribution",
+              "origin": "contract",
+              "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+            },
+            {
+              "id": "aanp",
+              "label": "aanp",
+              "amount": 6240,
+              "employer": 0,
+              "base": "5200.00",
+              "quantity": "1",
+              "rate": "1.2",
+              "category": "contribution",
+              "origin": "contract",
+              "ruleVersion": "ebf46da7-d473-462b-a18a-831661b47c42"
+            },
+            {
+              "id": "lpp",
+              "label": "lpp",
+              "amount": 24500,
+              "employer": 24500,
+              "base": "",
+              "quantity": "1",
+              "rate": "",
+              "category": "contribution",
+              "origin": "pensionStatement",
+              "ruleVersion": "6871e13a-77ab-47e8-af73-c143a912f2d4"
+            }
+          ],
+          "gross": 520000,
+          "deductions": 64020,
+          "reimbursements": 0,
+          "net": 455980,
+          "employer": 75864,
+          "cost": 595864,
+          "salary": 520000,
+          "avsBase": 520000,
+          "acBase": 520000,
+          "laaBase": 520000,
+          "laaEarnings": 520000,
+          "accrual": "0.000000000000",
+          "thirteenPaid": 0,
+          "thirteenBalance": "0.000000000000",
+          "errors": [],
+          "warnings": [],
+          "prorata": "1.00000000"
+        },
+        "paidDate": "2026-01-28",
+        "paymentReview": false,
+        "needsReview": false,
+        "issued": true,
+        "updated": "2026-10-09T09:56:37.409Z"
+      },
+      "pdf": "JVBERi0xLjcKRnJvemVuIGhpc3RvcmljYWwgZG9jdW1lbnQKJSVFT0Y="
+    }
+  ],
+  "exports": [
+    {
+      "id": "annual-fixture",
+      "year": 2026,
+      "employeeId": "581e1270-f165-4e01-9ced-3a9230b3c674",
+      "created": "2026-01-31",
+      "kind": "pdf",
+      "stale": true,
+      "data": "JVBERi1hbm51YWw=",
+      "name": "annual.pdf"
+    }
+  ],
+  "version": 0,
+  "dataModel": 2
+}

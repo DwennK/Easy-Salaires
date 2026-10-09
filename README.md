@@ -94,6 +94,7 @@ The monthly overview provides a balanced accounting CSV with account numbers to 
 - **Automatic backups:** before changes when opening an existing database, at most once per day. The app retains 30 automatic backups per database. The default location is `Easy-Salaires-backups` beside the database; the destination is configurable.
 - **Portable exports:** use **Export a .db backup** to produce a consistent file, including changes in the SQLite write-ahead log. Avoid copying a live working database directly.
 - **Validated restoration:** the app checks its signature, schema version, integrity and foreign keys, preserves a backup of the previous file, and restores to a newly chosen filename without overwriting an existing database.
+- **Automatic upgrades:** older supported databases are backed up in `before-migrations/` and upgraded transactionally when opened, including after a manual app installation. Restoration upgrades only the destination copy. Schema and JSON formats newer than this app are rejected; migration backups are retained separately from daily rotation.
 - **Concurrent-write protection:** an operating-system lock and version counter protect against conflicting writes. An empty `.db.lockfile` may remain after closing; it contains no payroll data and is not part of a backup.
 - **History preservation:** records with history are archived instead of deleted. SQLite protects issued revisions against modification and deletion.
 
@@ -111,11 +112,11 @@ Local databases, backups, credentials, dependencies, builds and QA output are ex
 ## Development and validation
 
 ```sh
-# TypeScript, payroll/document tests and production frontend build
+# Compatibility contract, TypeScript, payroll/document tests, SQLite tests and frontend build
 pnpm check
 
-# Native storage, transactions, locking and backup/restore tests
-cargo test --locked --manifest-path src-tauri/Cargo.toml
+# Real SQLite storage tests without building Tauri; temporary artifacts are removed
+pnpm test:storage
 ```
 
 For browser checks, start `pnpm dev` in a separate terminal, then run:
