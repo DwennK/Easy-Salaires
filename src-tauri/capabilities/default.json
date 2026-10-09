@@ -1,0 +1,6 @@
+{
+  "identifier": "main",
+  "description": "Main application window; file access only through narrowly scoped native commands and dialogs.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

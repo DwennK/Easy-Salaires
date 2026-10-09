@@ -1,0 +1,153 @@
+<div align="center">
+  <img src="src/assets/app-icon.png" alt="Easy Salaires app icon" width="112" />
+  <h1>Easy Salaires</h1>
+  <p><strong>Swiss payroll. One clear workspace. Your data stays on your computer.</strong></p>
+  <p>An offline desktop app for small businesses, with a full year of payroll at a glance.</p>
+  <p><strong>Tauri 2 · Vue 3 · TypeScript · Rust · SQLite</strong><br />French & English · macOS & Windows targets</p>
+  <p><a href="#getting-started">Getting started</a> · <a href="#the-payroll-workflow">Workflow</a> · <a href="#data-and-backups">Data & backups</a> · <a href="#documentation">Documentation</a></p>
+</div>
+
+---
+
+## A year of payroll, without the spreadsheet juggling
+
+Easy Salaires brings employee records, monthly calculations, payslips and annual exports into a local desktop workspace. Select an employee, see all twelve months, and move from a draft to an issued PDF while keeping previous revisions available.
+
+The app includes a **2026 CCNC / Neuchâtel preset**. Company-specific insurance rates and employee pension contributions must be configured before issuing payroll documents. See the [payroll rules and scope](docs/payroll-rules.md) for assumptions, sources and rounding conventions.
+
+| Capability | What you can do |
+| --- | --- |
+| Annual employee workspace | See twelve months, edit salary or hours inline, add bonuses and expenses, and apply a salary to following months. |
+| Payroll calculations | Handle monthly and hourly pay, explicit prorating, overtime, salary-impacting absences, allowances and 13th-salary accruals and payments. |
+| Shared employee records | Update common details while preserving explicit monthly exceptions. |
+| Payment tracking | Record the amount paid and payment date separately from the calculated net salary, including partial payments. |
+| Document history | Generate A4 payslips, retain original PDF revisions and identify documents that need updating. |
+| Exports | Produce individual or merged monthly PDFs, UTF-8 CSV, numeric Excel workbooks and a partially prefilled official salary certificate. |
+| Local storage | Keep each company's records, logos, document history and annual exports in a portable SQLite database. |
+| Personalization | Switch between French and English and choose Kiwi, Ocean, Lavender or Terracotta colors. |
+
+## Getting started
+
+### Requirements
+
+- **Node.js 22.12 or newer** and **pnpm 12.10.1**, pinned in `package.json`.
+- **Rust stable** and the native build tools for your platform.
+- **macOS:** Xcode Command Line Tools. The configured minimum deployment target is macOS 12.
+- **Windows:** Visual Studio Build Tools with C++ tooling, Windows SDK and WebView2.
+
+The recorded development environment uses Node.js 26.10.0 and Rust 1.94.1. Native macOS builds have been exercised on Apple Silicon; Windows builds and runtime behavior still require validation on Windows.
+
+```sh
+git clone https://github.com/DwennK/Easy-Salaires.git
+cd Easy-Salaires
+
+# Install the pinned package manager if needed.
+npm install -g pnpm@12.10.1
+
+pnpm install --frozen-lockfile
+pnpm tauri dev
+```
+
+For a browser-only demo:
+
+```sh
+pnpm dev
+```
+
+Open `http://127.0.0.1:1420`. The web preview uses demo data stored in IndexedDB. Real company database files are opened in the native desktop app.
+
+## The payroll workflow
+
+1. **Create a company** and choose its `.db` file, or explore the separate demonstration.
+2. **Complete the setup guide.** Enter company details, confirm the relevant fund and configure insurance rates. Missing accident-insurance rates block issuance, while drafts remain available. Pension contributions are set per employee.
+3. **Add an employee** through identity, contract and salary, insurance, and review. The monthly salary is the actual amount due at the displayed employment percentage.
+4. **Work through the year.** Edit salary or hours, add supplements and expenses, and open any month for details. Forecast months are excluded from saved totals until recorded. Earlier months needed for cumulative calculations are prepared automatically for that employee.
+5. **Generate a payslip.** Earlier calculation inputs must be complete; their PDFs do not need to have been issued first.
+6. **Record payments.** Enter the amount paid and date. Corrections preserve those entries and show any difference requiring review. The app does not initiate a bank transfer.
+7. **Review changes and export.** Shared data updates recalculate affected payrolls while preserving monthly exceptions. Original issued PDFs remain in history; outdated documents and annual exports are flagged for regeneration.
+
+The monthly overview provides a balanced accounting CSV with account numbers to assign. The annual summary provides CSV/Excel exports and the official salary certificate. Shared contribution settings apply to the selected year; there is no separate effective-month selector in the current workflow.
+
+## Data and backups
+
+**Native SQLite is the source of truth.** A company database includes employee records, rules, payrolls, immutable revisions, original PDFs and annual exports. An **exported backup `.db`** is portable between the desktop platforms.
+
+- **Automatic backups:** before changes when opening an existing database, at most once per day. The app retains 30 automatic backups per database. The default location is `Easy-Salaires-backups` beside the database; the destination is configurable.
+- **Portable exports:** use **Export a .db backup** to produce a consistent file, including changes in the SQLite write-ahead log. Avoid copying a live working database directly.
+- **Validated restoration:** the app checks its signature, schema version, integrity and foreign keys, preserves a backup of the previous file, and restores to a newly chosen filename without overwriting an existing database.
+- **Concurrent-write protection:** an operating-system lock and version counter protect against conflicting writes. An empty `.db.lockfile` may remain after closing; it contains no payroll data and is not part of a backup.
+- **History preservation:** records with history are archived instead of deleted. SQLite protects issued revisions against modification and deletion.
+
+Native preferences store recent files and backup locations in the Tauri application-data directory:
+
+| Platform | Location |
+| --- | --- |
+| macOS | `~/Library/Application Support/ch.easysalaires.desktop` |
+| Windows | `%APPDATA%/ch.easysalaires.desktop` |
+
+Only the color-theme preference uses localStorage; native payroll records do not. Database files and backups are **not encrypted by the app**, so their protection depends on the computer's account and disk security. There is no cloud synchronization or telemetry.
+
+Local databases, backups, credentials, dependencies, builds and QA output are excluded by the repository's `.gitignore` files. Both dependency lockfiles remain versioned.
+
+## Development and validation
+
+```sh
+# TypeScript, payroll/document tests and production frontend build
+pnpm check
+
+# Native storage, transactions, locking and backup/restore tests
+cargo test --locked --manifest-path src-tauri/Cargo.toml
+```
+
+For browser checks, start `pnpm dev` in a separate terminal, then run:
+
+```sh
+pnpm test:ui  # Payroll, PDF, Excel, persistence and FR/EN flows
+pnpm test:ux  # Guided setup, forms and validation
+pnpm test:v2  # Annual editing, shared data, payments and four themes
+```
+
+The browser scripts use installed **Google Chrome** with an isolated temporary profile. They do not reuse a personal browser profile or download Chromium. Generated screenshots and verification files are written under the ignored `output/` directory.
+
+### Desktop builds
+
+```sh
+pnpm tauri build --bundles app  # macOS application bundle, on macOS
+pnpm tauri build                # Platform installers, on the target OS
+```
+
+Build artifacts are generated under `src-tauri/target/release/bundle/`. Build and test Windows installers on Windows. Apple distribution signing, notarization and Windows installer validation remain separate delivery steps; this repository does not configure a release or deployment pipeline.
+
+### Project structure
+
+```text
+src/
+  components/          Vue screens, forms and annual workspace
+  domain/              Payroll rules, decimal arithmetic and workflows
+  lib/                 Native bridge, documents and localization
+src-tauri/
+  src/                 Rust commands and SQLite storage
+  migrations/          Versioned database schema
+public/
+  fonts/               Embedded PDF font and its license
+  templates/           Official salary certificate and guide
+scripts/               Browser verification flows
+tests/                 Payroll, workflow and document tests
+docs/                  Architecture, rules, validation and asset provenance
+```
+
+## Scope and limitations
+
+- **No Swissdec certification**, withholding-tax calculation, bank integration or electronic filing.
+- The salary certificate uses the **original Swiss Federal Tax Administration Form 11**. Identity, period, fields 1, 8, 9, 10.1 and 11, and reviewed remarks are partially prefilled. More complex cases require completion in a PDF reader using the included guide.
+- Insurance and pension inputs depend on company contracts and employee circumstances. Review the documented rules before issuing payroll.
+- macOS 12 is a configured minimum target, not a verified test environment. Local macOS bundles are not distribution-signed or notarized. Windows has not been built or executed in the recorded validation.
+
+## Documentation
+
+The detailed project notes are currently in French:
+
+- [Payroll rules, sources and rounding](docs/payroll-rules.md)
+- [Architecture and data model](docs/architecture.md)
+- [Recorded validation and platform limitations](docs/validation.md)
+- [Bundled assets, provenance and third-party licenses](docs/assets.md)

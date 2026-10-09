@@ -1,0 +1,182 @@
+import type { Company, Employee, Rules, Terms } from "./types";
+export const uid = () => crypto.randomUUID();
+export const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
+export const today = () => new Date().toLocaleDateString("sv-SE");
+export const periodNow = () => today().slice(0, 7);
+export function companyDefaults(): Company {
+  return {
+    name: "",
+    address: "",
+    postal: "",
+    city: "",
+    canton: "NE",
+    country: "CH",
+    uid: "",
+    contact: "",
+    responsible: "",
+    footer: "",
+    logo: "",
+    lang: "fr",
+    demo: false,
+  };
+}
+export function termsDefaults(
+  effective = `${new Date().getFullYear()}-01`,
+): Terms {
+  return {
+    id: uid(),
+    effective,
+    mode: "monthly",
+    salary: "",
+    activity: "100",
+    weeklyHours: "42",
+    workDays: "5",
+    avsStatus: "standard",
+    exemptionReason: "",
+    lpp: true,
+    lppEmployee: null,
+    lppEmployer: null,
+    thirteen: false,
+    thirteenMonth: 12,
+    thirteenBase: "base",
+    family: false,
+    familyAmount: null,
+    vacation: false,
+    vacationRate: null,
+    vacationBase: "base",
+    holiday: false,
+    holidayRate: null,
+    holidayBase: "base",
+    overrides: [],
+  };
+}
+export function employeeDefaults(): Employee {
+  return {
+    id: uid(),
+    firstName: "",
+    lastName: "",
+    address: "",
+    postal: "",
+    city: "",
+    birthDate: "",
+    avs: "",
+    iban: "",
+    start: `${new Date().getFullYear()}-01-01`,
+    end: "",
+    role: "employee",
+    archived: false,
+    terms: [termsDefaults()],
+  };
+}
+export function preset2026(): Rules {
+  const ahv = "https://www.ahv-iv.ch/p/2.01.f",
+    ac = "https://www.ahv-iv.ch/p/2.08.f",
+    ne =
+      "https://www.caisseavsne.ch/fr/Assurances/AVS-Cotisations/Employeurs-et-salarie-e-s/Employeurs-et-salarie-e-s.html";
+  return {
+    id: uid(),
+    year: 2026,
+    effective: "2026-01",
+    verified: true,
+    acCap: "148200",
+    laaCap: "148200",
+    sources: [
+      ahv,
+      ac,
+      ne,
+      "https://www.suva.ch/fr-ch/assurance/assurance-accidents/assurance-accidents-laa",
+    ].map((url) => ({ url, year: 2026, verified: "2026-10-08" })),
+    contributions: [
+      {
+        id: "avs",
+        label: "avs",
+        active: true,
+        kind: "percent",
+        base: "avs",
+        employee: "5.3",
+        employer: "5.3",
+        source: ahv,
+      },
+      {
+        id: "ac",
+        label: "ac",
+        active: true,
+        kind: "percent",
+        base: "ac",
+        employee: "1.1",
+        employer: "1.1",
+        source: ac,
+      },
+      {
+        id: "af",
+        label: "af",
+        active: true,
+        kind: "percent",
+        base: "avs",
+        employee: "0",
+        employer: "1.8",
+        source: ne,
+      },
+      {
+        id: "lfapp",
+        label: "lfapp",
+        active: true,
+        kind: "percent",
+        base: "avs",
+        employee: "0",
+        employer: "0.507",
+        source: ne,
+      },
+      {
+        id: "lae",
+        label: "lae",
+        active: true,
+        kind: "percent",
+        base: "avs",
+        employee: "0",
+        employer: "0.18",
+        source: ne,
+      },
+      {
+        id: "admin",
+        label: "admin",
+        active: true,
+        kind: "percent",
+        base: "avsContributions",
+        employee: "0",
+        employer: "1.8",
+        source: ne,
+      },
+      {
+        id: "aap",
+        label: "aap",
+        active: true,
+        kind: "percent",
+        base: "laa",
+        employee: "0",
+        employer: null,
+        source: "contract",
+      },
+      {
+        id: "aanp",
+        label: "aanp",
+        active: true,
+        kind: "percent",
+        base: "laa",
+        employee: null,
+        employer: "0",
+        source: "contract",
+      },
+      {
+        id: "ijm",
+        label: "ijm",
+        active: false,
+        kind: "percent",
+        base: "salary",
+        employee: null,
+        employer: null,
+        source: "contract",
+      },
+    ],
+  };
+}

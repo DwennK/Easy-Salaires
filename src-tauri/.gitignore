@@ -1,0 +1,5 @@
+# Rust build output and Tauri-generated schemas/platform projects
+/target/
+/gen/
+
+# Keep Cargo.lock versioned for reproducible application builds.

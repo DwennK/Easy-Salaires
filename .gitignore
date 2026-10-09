@@ -1,0 +1,50 @@
+# JavaScript dependencies and generated frontend files
+node_modules/
+/dist/
+.vite/
+.pnpm-store/
+*.tsbuildinfo
+
+# Local payroll data, SQLite sidecars and backups
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.lockfile
+Easy-Salaires-backups/
+/backups/
+/exports/
+
+# Local environment and signing credentials
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# QA output, logs and local caches
+/output/
+/coverage/
+/playwright-report/
+/test-results/
+.playwright-cli/
+*.log
+*.log.*
+*.profraw
+.cache/
+
+# Editor and operating-system files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
