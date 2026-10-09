@@ -8,6 +8,8 @@ import {
   FolderOpen,
   ShieldCheck,
   ChevronRight,
+  ChevronLeft,
+  ChevronDown,
   Plus,
   Download,
   ArrowUpRight,
@@ -84,6 +86,7 @@ import AnnualWorkspace from "./components/AnnualWorkspace.vue";
 import AppUpdater from "./components/AppUpdater.vue";
 import ThemePicker from "./components/ThemePicker.vue";
 import icon from "./assets/app-icon.png";
+import "./monthly.css";
 const money = (value: number) => formatMoney(value, lang.value);
 const state = ref<State | null>(null),
   page = ref("salaries"),
@@ -165,6 +168,22 @@ const monthReady = computed(
       (p) => p.issued && !p.needsReview && !p.result.errors.length,
     ),
 );
+const monthPending = computed(() =>
+  rows.value.filter(
+    (p) => p.result.errors.length || p.needsReview || !p.issued,
+  ),
+);
+const monthNext = computed(() => monthPending.value[0]);
+const monthValidCount = computed(
+  () => rows.value.filter((p) => !p.result.errors.length).length,
+);
+const monthMissing = computed(
+  () =>
+    eligible.value.filter((e) => !rows.value.some((p) => p.employeeId === e.id))
+      .length,
+);
+const monthExportOpen = ref(false);
+const monthExports = ref<HTMLElement | null>(null);
 const workflowStep = computed(() =>
   !rows.value.length
     ? 0
@@ -174,6 +193,35 @@ const workflowStep = computed(() =>
         ? 2
         : 3,
 );
+const monthPrimaryLabel = computed(() => {
+  if (!state.value?.employees.some((e) => !e.archived))
+    return tr("addEmployee");
+  if (!rows.value.length || monthMissing.value) return tr("monthPrepare");
+  if (monthNext.value) return tr(payrollAction(state.value!, monthNext.value));
+  return tr("exportMonth");
+});
+function monthPrimary() {
+  if (!state.value!.employees.some((e) => !e.archived))
+    employeeEdit.value = employeeDefaults();
+  else if (!rows.value.length || monthMissing.value) prepare();
+  else if (monthNext.value) payrollEdit.value = clone(monthNext.value);
+  else exportMonth();
+}
+function shiftMonth(offset: number) {
+  const date = new Date(year.value, month.value - 1 + offset, 1);
+  period.value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+function closeMonthExports(event: PointerEvent) {
+  if (!monthExports.value?.contains(event.target as Node))
+    monthExportOpen.value = false;
+}
+onMounted(() => document.addEventListener("pointerdown", closeMonthExports));
+onBeforeUnmount(() =>
+  document.removeEventListener("pointerdown", closeMonthExports),
+);
+watch([period, page], () => {
+  monthExportOpen.value = false;
+});
 async function loadBackupStatus() {
   backupStatusError.value = false;
   lastBackup.value = native
@@ -937,7 +985,10 @@ onMounted(() =>
           :period="period"
           @step="setupStep"
         />
-        <div class="page-heading" v-if="page !== 'salaries'">
+        <div
+          class="page-heading"
+          v-if="page !== 'salaries' && page !== 'monthly'"
+        >
           <div>
             <p class="eyebrow">
               {{
@@ -962,23 +1013,6 @@ onMounted(() =>
             </p>
           </div>
           <button
-            v-if="page === 'monthly'"
-            class="button primary"
-            :disabled="busy"
-            @click="
-              state.employees.some((e) => !e.archived)
-                ? prepare()
-                : (employeeEdit = employeeDefaults())
-            "
-          >
-            <Plus :size="18" />{{
-              tr(
-                state.employees.some((e) => !e.archived)
-                  ? "prepare"
-                  : "addEmployee",
-              )
-            }}</button
-          ><button
             v-if="page === 'employees'"
             class="button primary"
             @click="employeeEdit = employeeDefaults()"
@@ -1016,120 +1050,202 @@ onMounted(() =>
             @reset="resetSalary"
           />
         </template>
-        <template v-if="page === 'monthly'"
-          ><div class="period-toolbar">
-            <div class="period-select">
-              <label
-                ><span class="sr-only">{{ tr("month") }}</span
-                ><select :aria-label="tr('month')" v-model="month">
-                  <option v-for="(m, i) in months()" :key="m" :value="i + 1">
-                    {{ m }}
-                  </option>
-                </select></label
-              ><label
-                ><span class="sr-only">{{ tr("year") }}</span
-                ><select :aria-label="tr('year')" v-model="year">
-                  <option v-for="y in years" :key="y" :value="y">
-                    {{ y }}
-                  </option>
-                </select></label
-              >
+        <section
+          v-if="page === 'monthly'"
+          class="month-workspace"
+          aria-labelledby="month-title"
+        >
+          <div class="month-heading">
+            <div>
+              <p class="eyebrow">
+                {{ state.company.canton }} · {{ tr("monthOverview") }}
+              </p>
+              <h1 id="month-title">{{ tr("monthly") }}</h1>
             </div>
-            <div class="inline-actions">
+            <div class="month-period">
               <button
-                class="button secondary"
-                :disabled="
-                  busy ||
-                  !rows.length ||
-                  rows.some((p) => p.result.errors.length)
-                "
-                @click="exportAccounting"
-              >
-                <Download :size="16" />{{ tr("accountingExport") }}
-              </button>
-              <button
-                class="button secondary"
-                :disabled="busy || !monthReady"
-                @click="exportMonth()"
-              >
-                <Download :size="16" />{{ tr("exportMonth") }}</button
-              ><button
-                v-if="native"
                 class="icon-button"
-                :disabled="busy || !monthReady"
-                @click="exportMonth(true)"
-                :aria-label="tr('individualPdfs')"
+                :aria-label="tr('monthPrevious')"
+                :disabled="busy"
+                @click="shiftMonth(-1)"
               >
-                <FolderOpen :size="18" />
+                <ChevronLeft :size="18" />
+              </button>
+              <select
+                :aria-label="tr('month')"
+                v-model="month"
+                :disabled="busy"
+              >
+                <option v-for="(m, i) in months()" :key="m" :value="i + 1">
+                  {{ m }}
+                </option>
+              </select>
+              <select :aria-label="tr('year')" v-model="year" :disabled="busy">
+                <option v-for="y in years" :key="y">{{ y }}</option>
+              </select>
+              <button
+                class="icon-button"
+                :aria-label="tr('monthNext')"
+                :disabled="busy"
+                @click="shiftMonth(1)"
+              >
+                <ChevronRight :size="18" />
               </button>
             </div>
           </div>
-          <ol class="month-workflow" :aria-label="tr('monthlyWorkflow')">
-            <li
-              v-for="(step, i) in [
-                'workflowPrepare',
-                'workflowCheck',
-                'workflowPdf',
-                'workflowPay',
-              ]"
-              :key="step"
-              :aria-current="workflowStep === i ? 'step' : undefined"
-              :class="{ current: workflowStep === i, done: workflowStep > i }"
-            >
-              <span class="step-number">{{ i + 1 }}</span
-              >{{ tr(step) }}
-            </li>
-          </ol>
-          <p class="hint">
-            {{
-              tr(rows.length && !monthReady ? "exportBlocked" : "prepareHelp")
-            }}
-          </p>
-          <p
-            v-if="rows.some((p) => p.result.errors.length)"
-            class="hint partial-hint"
+          <div
+            class="month-focus"
+            :class="{ ready: monthReady && !monthMissing }"
           >
-            {{ tr("incompleteTotals") }}
-          </p>
-          <div class="monthly-metrics">
-            <div>
+            <span class="month-focus-icon"
+              ><Check v-if="monthReady && !monthMissing" :size="22" /><FileText
+                v-else
+                :size="22"
+            /></span>
+            <div class="month-focus-copy" aria-live="polite">
+              <strong
+                >{{ issued }} / {{ rows.length }}
+                {{ tr("issuedCount") }}</strong
+              >
+              <p v-if="monthMissing">
+                {{ monthMissing }} {{ tr("monthMissing") }}
+              </p>
+              <p v-else-if="monthNext">
+                {{ monthNext.employee.firstName }}
+                {{ monthNext.employee.lastName }} ·
+                {{ tr(payrollAction(state, monthNext))
+                }}<span v-if="monthPending.length > 1">
+                  · {{ monthPending.length }} {{ tr("monthPending") }}</span
+                >
+              </p>
+              <p v-else>
+                {{ tr(monthReady ? "monthReadyHelp" : "prepareHelp") }}
+              </p>
+            </div>
+            <button
+              class="button primary"
+              :disabled="busy"
+              @click="monthPrimary"
+            >
+              <Download
+                v-if="monthReady && !monthMissing"
+                :size="17"
+              /><ChevronRight v-else :size="17" />{{ monthPrimaryLabel }}
+            </button>
+          </div>
+          <div v-if="rows.length" class="month-summary">
+            <div class="month-summary-net">
               <span>{{ tr("net") }}</span
-              ><strong>{{ money(totals.net) }}<small>CHF</small></strong>
+              ><strong>{{ money(totals.net) }} <small>CHF</small></strong>
             </div>
             <div>
               <span>{{ tr("gross") }}</span
-              ><strong>{{ money(totals.gross) }}<small>CHF</small></strong>
+              ><strong>{{ money(totals.gross) }} <small>CHF</small></strong>
             </div>
             <div>
-              <span>{{ tr("progress") }}</span
+              <span>{{ tr("settled") }}</span
               ><strong
-                >{{ issued }}<em>/ {{ rows.length }}</em></strong
-              ><small>{{ tr("issuedCount") }}</small>
+                >{{ rows.filter((p) => p.paidDate).length }}
+                <small>/ {{ rows.length }}</small></strong
+              >
+            </div>
+            <p v-if="monthValidCount !== rows.length" class="month-partial">
+              {{ tr("monthPartial") }} · {{ monthValidCount }} /
+              {{ rows.length }} {{ tr("monthIncluded")
+              }}<span>{{ tr("incompleteTotals") }}</span>
+            </p>
+          </div>
+          <div class="month-table-toolbar">
+            <h2>
+              {{ tr("employees") }} <span>{{ rows.length }}</span>
+            </h2>
+            <div class="month-table-actions">
+              <label class="check compact"
+                ><input type="checkbox" v-model="showSecondary" />{{
+                  tr("secondary")
+                }}</label
+              >
+              <div
+                ref="monthExports"
+                class="month-export"
+                @keydown.esc.stop="
+                  monthExportOpen = false;
+                  ($refs.monthExportButton as HTMLButtonElement)?.focus();
+                "
+              >
+                <button
+                  ref="monthExportButton"
+                  class="button secondary"
+                  :aria-expanded="monthExportOpen"
+                  aria-controls="month-export-panel"
+                  @click="monthExportOpen = !monthExportOpen"
+                >
+                  <Download :size="16" />{{ tr("monthExport")
+                  }}<ChevronDown :size="14" />
+                </button>
+                <div
+                  v-if="monthExportOpen"
+                  id="month-export-panel"
+                  class="month-export-panel"
+                >
+                  <button
+                    :disabled="busy || !monthReady"
+                    @click="
+                      monthExportOpen = false;
+                      exportMonth();
+                    "
+                  >
+                    <FileText :size="17" />{{ tr("exportMonth") }}
+                  </button>
+                  <button
+                    v-if="native"
+                    :disabled="busy || !monthReady"
+                    @click="
+                      monthExportOpen = false;
+                      exportMonth(true);
+                    "
+                  >
+                    <FolderOpen :size="17" />{{ tr("individualPdfs") }}
+                  </button>
+                  <p v-if="!monthReady">{{ tr("exportBlocked") }}</p>
+                  <button
+                    :disabled="
+                      busy || !rows.length || monthValidCount !== rows.length
+                    "
+                    @click="
+                      monthExportOpen = false;
+                      exportAccounting();
+                    "
+                  >
+                    <Download :size="17" />{{ tr("accountingExport") }}
+                  </button>
+                  <p v-if="!rows.length || monthValidCount !== rows.length">
+                    {{ tr("monthCsvBlocked") }}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="table-heading">
-            <h2>
-              {{ periodLabel(period) }} <span>{{ rows.length }}</span>
-            </h2>
-            <label class="check compact"
-              ><input type="checkbox" v-model="showSecondary" />{{
-                tr("secondary")
-              }}</label
-            >
-          </div>
           <div class="table-scroll" v-if="rows.length">
-            <table>
+            <table class="month-table">
+              <caption class="sr-only">
+                {{
+                  tr("monthly")
+                }}
+                ·
+                {{
+                  periodLabel(period)
+                }}
+              </caption>
               <thead>
                 <tr>
                   <th>{{ tr("employee") }}</th>
-                  <th>{{ tr("mode") }}</th>
                   <th class="num">{{ tr("gross") }}</th>
                   <th class="num">{{ tr("deductions") }}</th>
                   <th class="num">{{ tr("net") }}</th>
                   <th v-if="showSecondary" class="num">{{ tr("employer") }}</th>
                   <th v-if="showSecondary" class="num">{{ tr("cost") }}</th>
-                  <th>{{ tr("status") }}</th>
-                  <th>{{ tr("payment") }}</th>
+                  <th>{{ tr("monthTracking") }}</th>
                   <th>{{ tr("nextAction") }}</th>
                 </tr>
               </thead>
@@ -1157,20 +1273,25 @@ onMounted(() =>
                               ? ` · ${tr("owner")}`
                               : ""
                           }}</small
+                        ><small class="month-remuneration"
+                          >{{
+                            tr(
+                              p.terms.mode === "monthly"
+                                ? "monthlyMode"
+                                : "hourly",
+                            )
+                          }}<template v-if="p.terms.mode === 'hourly'">
+                            ·
+                            {{
+                              p.input.hours == null
+                                ? "—"
+                                : decimalText(p.input.hours)
+                            }}
+                            h × {{ decimalText(p.terms.salary) }} CHF</template
+                          ></small
                         ></span
                       >
                     </button>
-                  </td>
-                  <td>
-                    <span>{{
-                      tr(p.terms.mode === "monthly" ? "monthlyMode" : "hourly")
-                    }}</span
-                    ><small v-if="p.terms.mode === 'hourly'"
-                      >{{
-                        p.input.hours == null ? "—" : decimalText(p.input.hours)
-                      }}
-                      h × {{ decimalText(p.terms.salary) }} CHF</small
-                    >
                   </td>
                   <td class="num">
                     {{ p.result.errors.length ? "—" : money(p.result.gross) }}
@@ -1192,30 +1313,32 @@ onMounted(() =>
                     {{ p.result.errors.length ? "—" : money(p.result.cost) }}
                   </td>
                   <td>
-                    <span
-                      class="badge"
-                      :class="
-                        status(p) === 'complete'
-                          ? 'green'
-                          : status(p) === 'ready'
-                            ? 'neutral'
-                            : 'amber'
-                      "
-                      ><span class="dot"></span>{{ tr(status(p)) }}</span
-                    >
-                  </td>
-                  <td>
-                    <span class="payment-status" :class="{ done: !!p.paidDate }"
-                      ><Check v-if="p.paidDate" :size="14" />{{
-                        tr(
-                          p.paidDate
-                            ? "paid"
-                            : p.paymentReview
-                              ? "review"
-                              : "unpaid",
-                        )
-                      }}</span
-                    >
+                    <div class="month-tracking">
+                      <span
+                        class="badge"
+                        :class="
+                          status(p) === 'complete'
+                            ? 'green'
+                            : status(p) === 'ready'
+                              ? 'neutral'
+                              : 'amber'
+                        "
+                        ><span class="dot"></span>{{ tr(status(p)) }}</span
+                      >
+                      <span
+                        class="payment-status"
+                        :class="{ done: !!p.paidDate }"
+                        ><Check v-if="p.paidDate" :size="14" />{{
+                          tr(
+                            p.paidDate
+                              ? "paid"
+                              : p.paymentReview
+                                ? "review"
+                                : "unpaid",
+                          )
+                        }}</span
+                      >
+                    </div>
                   </td>
                   <td>
                     <button
@@ -1230,7 +1353,7 @@ onMounted(() =>
               </tbody>
               <tfoot>
                 <tr>
-                  <td colspan="2">{{ tr("total") }} · CHF</td>
+                  <td>{{ tr("total") }} · CHF</td>
                   <td class="num">{{ money(totals.gross) }}</td>
                   <td class="num">{{ money(totals.deductions) }}</td>
                   <td class="num">{{ money(totals.net) }}</td>
@@ -1240,7 +1363,7 @@ onMounted(() =>
                   <td v-if="showSecondary" class="num">
                     {{ money(totals.cost) }}
                   </td>
-                  <td colspan="3"></td>
+                  <td colspan="2"></td>
                 </tr>
               </tfoot>
             </table>
@@ -1275,6 +1398,44 @@ onMounted(() =>
               }}
             </button>
           </div>
+          <details class="month-help">
+            <summary>{{ tr("monthlyWorkflow") }}</summary>
+            <ol class="month-workflow" :aria-label="tr('monthlyWorkflow')">
+              <li
+                v-for="(step, i) in [
+                  'workflowPrepare',
+                  'workflowCheck',
+                  'workflowPdf',
+                  'workflowPay',
+                ]"
+                :key="step"
+                :aria-current="workflowStep === i ? 'step' : undefined"
+                :class="{ current: workflowStep === i, done: workflowStep > i }"
+              >
+                <span class="step-number">{{ i + 1 }}</span
+                >{{ tr(step) }}
+              </li>
+            </ol>
+            <p>{{ tr("prepareHelp") }}</p>
+            <p>{{ tr("monthlyFirstHelp") }}</p>
+            <button
+              class="text-button"
+              :disabled="busy"
+              @click="
+                state.employees.some((e) => !e.archived)
+                  ? prepare()
+                  : (employeeEdit = employeeDefaults())
+              "
+            >
+              {{
+                tr(
+                  state.employees.some((e) => !e.archived)
+                    ? "prepare"
+                    : "addEmployee",
+                )
+              }}<ChevronRight :size="15" />
+            </button>
+          </details>
           <div class="table-note">
             <ShieldCheck :size="16" /><span>{{
               state.company.demo ? tr("demoNotice") : tr("offline")
@@ -1284,8 +1445,8 @@ onMounted(() =>
               {{ rows.filter((p) => p.paidDate).length }} /
               {{ rows.length }}</span
             >
-          </div></template
-        >
+          </div>
+        </section>
         <template v-else-if="page === 'employees'"
           ><div class="period-toolbar">
             <span>{{ employees.length }} {{ tr("people") }}</span

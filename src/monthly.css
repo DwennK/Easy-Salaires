@@ -1,0 +1,346 @@
+/* Monthly payroll: compact overview, guided next action and progressive detail. */
+.month-workspace {
+  min-width: 0;
+}
+.month-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.month-heading .eyebrow {
+  margin: 0 0 8px;
+  font-size: 10px;
+}
+.month-heading h1 {
+  margin: 0;
+  font-size: 32px;
+  letter-spacing: -1.2px;
+}
+.month-period {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.month-period select {
+  border: 0;
+  background: transparent;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: capitalize;
+  padding-left: 7px;
+}
+.month-period .icon-button {
+  min-width: 36px;
+  min-height: 38px;
+}
+.month-focus {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+.month-focus-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  color: var(--green);
+  background: var(--accent);
+}
+.month-focus-copy {
+  flex: 1;
+  min-width: 0;
+}
+.month-focus-copy strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+.month-focus-copy p {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+.month-focus .button {
+  flex-shrink: 0;
+}
+.month-summary {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.8fr;
+  gap: 8px 28px;
+  padding: 22px 0;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.month-summary > div + div {
+  border-left: 1px solid var(--border);
+  padding-left: 28px;
+}
+.month-summary > div > span {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.month-summary strong {
+  font-size: 22px;
+  line-height: 1.3;
+  font-weight: 550;
+  letter-spacing: -0.6px;
+  font-variant-numeric: tabular-nums;
+}
+.month-summary .month-summary-net strong {
+  font-size: 28px;
+}
+.month-summary small {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+.month-partial {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--green);
+}
+.month-partial span {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 2px;
+}
+.month-table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 16px 0 12px;
+}
+.month-table-toolbar h2 {
+  font-size: 15px;
+  margin: 0;
+}
+.month-table-toolbar h2 > span {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 400;
+  margin-left: 6px;
+}
+.month-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.month-workspace .check.compact {
+  font-size: 11px;
+}
+.month-export {
+  position: relative;
+}
+.month-export > .button {
+  min-height: 38px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.month-export-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 330px;
+  max-width: calc(100vw - 40px);
+  z-index: 10;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 14px 36px var(--shadow);
+}
+.month-export-panel button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 12px 10px;
+  text-align: left;
+  font-size: 12px;
+  border-radius: 6px;
+}
+.month-export-panel button svg {
+  flex-shrink: 0;
+}
+.month-export-panel button:hover:not(:disabled) {
+  background: var(--hover);
+}
+.month-export-panel p {
+  margin: 0 10px 10px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.month-workspace .month-table th {
+  font-size: 11px;
+  padding: 12px;
+}
+.month-workspace .month-table td {
+  padding: 18px 12px;
+  font-size: 13px;
+}
+.month-workspace .person-cell strong {
+  font-size: 13px;
+}
+.month-workspace .person-cell small {
+  font-size: 10px;
+  line-height: 1.5;
+}
+.month-workspace .person-cell .month-remuneration {
+  margin-top: 2px;
+}
+.month-workspace .avatar {
+  width: 36px;
+  height: 36px;
+}
+.month-tracking {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.month-tracking .payment-status {
+  font-size: 10px;
+  color: var(--muted);
+}
+.month-workspace .row-action {
+  font-size: 11px;
+  max-width: 150px;
+}
+.month-workspace .month-table tfoot td {
+  font-size: 12px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+.month-help {
+  border-bottom: 1px solid var(--border);
+  padding: 14px 0;
+}
+.month-help summary {
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--muted);
+  width: fit-content;
+}
+.month-help p {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.month-help .text-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 14px;
+  font-size: 12px;
+}
+.month-help .month-workflow {
+  flex-wrap: wrap;
+}
+.month-workspace .table-note {
+  margin-top: 14px;
+  font-size: 10px;
+}
+@media (max-width: 1100px) {
+  .month-heading {
+    flex-wrap: wrap;
+  }
+  .month-focus {
+    flex-wrap: wrap;
+  }
+  .month-focus .button {
+    margin-left: 59px;
+  }
+  .month-workspace .month-table {
+    min-width: 780px;
+  }
+}
+@media (max-width: 600px) {
+  .month-heading {
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .month-heading h1 {
+    font-size: 28px;
+  }
+  .month-period {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .month-period select {
+    font-size: 14px;
+  }
+  .month-focus {
+    padding: 16px;
+    gap: 12px;
+  }
+  .month-focus-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+  }
+  .month-focus-copy strong {
+    font-size: 14px;
+  }
+  .month-focus .button {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+  .month-summary {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 20px 0;
+  }
+  .month-summary > div + div {
+    padding-left: 16px;
+  }
+  .month-summary > div:nth-child(3) {
+    grid-column: 1 / -1;
+    border-left: 0;
+    padding: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .month-summary strong,
+  .month-summary .month-summary-net strong {
+    font-size: 22px;
+  }
+  .month-summary > div:nth-child(3) strong {
+    font-size: 16px;
+  }
+  .month-table-toolbar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .month-table-actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .month-workspace .table-note {
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+}

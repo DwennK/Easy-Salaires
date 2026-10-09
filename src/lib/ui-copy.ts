@@ -25,6 +25,27 @@ export const uiCopy: Record<string, [string, string]> = {
     "Complete this payslip’s terms",
   ],
 
+  monthOverview: ["VUE D’ENSEMBLE", "OVERVIEW"],
+  monthPrevious: ["Mois précédent", "Previous month"],
+  monthNext: ["Mois suivant", "Next month"],
+  monthPrepare: ["Préparer le mois", "Prepare month"],
+  monthMissing: [
+    "fiche(s) à préparer pour ce mois.",
+    "payslip(s) to prepare this month.",
+  ],
+  monthPending: ["fiches à finaliser", "payslips to finalize"],
+  monthReadyHelp: [
+    "Les fiches sont prêtes. Téléchargez les PDF et suivez les paiements ci-dessous.",
+    "Payslips are ready. Download the PDFs and track payments below.",
+  ],
+  monthPartial: ["Total partiel", "Partial total"],
+  monthIncluded: ["fiches incluses", "payslips included"],
+  monthExport: ["Exporter", "Export"],
+  monthTracking: ["Suivi", "Tracking"],
+  monthCsvBlocked: [
+    "Complétez les fiches du mois pour exporter la pièce comptable.",
+    "Complete this month’s payslips to export the accounting entry.",
+  ],
   monthly: ["Salaires du mois", "Monthly payroll"],
   settingsSub: [
     "Les informations de votre entreprise, les cotisations et les sauvegardes.",
