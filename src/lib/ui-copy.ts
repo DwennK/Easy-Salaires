@@ -25,6 +25,33 @@ export const uiCopy: Record<string, [string, string]> = {
     "Complete this payslip’s terms",
   ],
 
+  payrollReady: ["Prête", "Ready"],
+  monthSalaryEdit: [
+    "Salaire brut de ce mois (CHF)",
+    "Gross salary for this month (CHF)",
+  ],
+  monthSalaryEditHelp: [
+    "Pour le taux d’activité de cet employé. Ce changement concerne uniquement ce mois.",
+    "At this employee’s employment level. This change applies to this month only.",
+  ],
+  payrollAdvanced: ["Réglages et calculs", "Settings and calculations"],
+  payrollExtras: ["Compléments et remarque", "Extras and note"],
+  payrollPaid: ["Paiement effectué", "Payment made"],
+  payrollRemaining: ["Reste à payer", "Remaining to pay"],
+  payrollOverpaid: ["Payé en trop", "Overpaid"],
+  payrollRecorded: ["Déjà enregistré", "Already recorded"],
+  payrollPaymentIncomplete: [
+    "Complétez le salaire pour vérifier le montant déjà payé.",
+    "Complete payroll to check the amount already paid.",
+  ],
+  payrollSaveIncomplete: [
+    "Vous pouvez enregistrer et compléter les informations manquantes plus tard.",
+    "You can save and complete the missing information later.",
+  ],
+  payrollSavedIncomplete: [
+    "Enregistré · informations à compléter",
+    "Saved · information still needed",
+  ],
   monthOverview: ["VUE D’ENSEMBLE", "OVERVIEW"],
   monthPrevious: ["Mois précédent", "Previous month"],
   monthNext: ["Mois suivant", "Next month"],

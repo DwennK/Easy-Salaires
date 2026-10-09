@@ -38,6 +38,7 @@ import {
   emptyState,
   prepareMonth,
   savePayroll,
+  missingEarlier,
   issueRevision,
   changeRules,
   archiveEmployee,
@@ -81,7 +82,12 @@ import SettingsView from "./components/SettingsView.vue";
 import BackupSettings from "./components/BackupSettings.vue";
 import Field from "./components/Field.vue";
 import SetupGuide from "./components/SetupGuide.vue";
-import { availableYears, payrollAction, rulesReady } from "./lib/ux";
+import {
+  availableYears,
+  payrollAction,
+  rulesReady,
+  addressReady,
+} from "./lib/ux";
 import AnnualWorkspace from "./components/AnnualWorkspace.vue";
 import AppUpdater from "./components/AppUpdater.vue";
 import ThemePicker from "./components/ThemePicker.vue";
@@ -629,15 +635,26 @@ async function archive(e: Employee) {
     notify("saved");
   });
 }
-async function payrollSave(p: Payroll, issue = false) {
+async function payrollSave(
+  p: Payroll,
+  payment?: { date: string; amount: string | null },
+) {
   await run(async () => {
     const s = clone(state.value!);
     const saved = savePayroll(s, p);
-    if (issue) {
-      const n = s.revisions.filter((r) => r.payrollId === p.id).length + 1;
+    if (payment) recordPayment(s, saved.id, payment.date, payment.amount);
+    const complete =
+      !saved.result.errors.length &&
+      !saved.needsReview &&
+      !missingEarlier(s, saved).length &&
+      !!saved.company.name &&
+      addressReady(saved.company) &&
+      addressReady(saved.employee);
+    const previous = s.revisions.filter((r) => r.payrollId === saved.id);
+    if (complete && (!saved.issued || !previous.length)) {
       const pdf = await payslipPdf(
         saved,
-        n,
+        previous.length + 1,
         s.company.lang,
         undefined,
         false,
@@ -646,18 +663,8 @@ async function payrollSave(p: Payroll, issue = false) {
       issueRevision(s, saved, toBase64(pdf));
     }
     await commit(s);
-    payrollEdit.value = clone(saved);
-    notify("saved");
-  });
-}
-async function setPayment(id: string, date: string, amount: string | null) {
-  await run(async () => {
-    const s = clone(state.value!);
-    const p = s.payrolls.find((p) => p.id === id)!;
-    recordPayment(s, id, date, amount);
-    await commit(s);
-    payrollEdit.value = clone(p);
-    notify("saved");
+    payrollEdit.value = null;
+    notify(complete ? "saved" : "payrollSavedIncomplete");
   });
 }
 function closePreview() {
@@ -1804,10 +1811,8 @@ onMounted(() =>
     :busy="busy"
     @close="payrollEdit = null"
     @save="payrollSave"
-    @issue="(p) => payrollSave(p, true)"
     @preview="preview"
     @original="original"
-    @payment="setPayment"
     @settings="
       (tab) => {
         payrollEdit = null;

@@ -8,7 +8,7 @@ import {
   ExternalLink,
 } from "lucide-vue-next";
 import type { Payroll, State, Element, Revision } from "../domain/types";
-import { clone, uid } from "../domain/defaults";
+import { clone, uid, today } from "../domain/defaults";
 import { applicable, calculate } from "../domain/payroll";
 import { missingEarlier } from "../domain/service";
 import { d, francs, money as formatMoney, decimalText } from "../domain/money";
@@ -20,32 +20,57 @@ import TermsForm from "./TermsForm.vue";
 const money = (value: number) => formatMoney(value, lang.value);
 const props = defineProps<{ payroll: Payroll; state: State; busy: boolean }>();
 const emit = defineEmits<{
-  save: [Payroll];
-  issue: [Payroll];
+  save: [Payroll, { date: string; amount: string | null } | undefined];
   preview: [Payroll];
   original: [Revision, boolean];
-  payment: [string, string, string | null];
   close: [];
   settings: [string];
   employee: [];
   earlier: [string];
 }>();
 const draft = ref(clone(props.payroll)),
-  editing = ref(!props.payroll.issued),
   adding = ref(false),
-  payment = ref(
-    props.payroll.paidDate || new Date().toLocaleDateString("sv-SE"),
-  ),
+  payment = ref(props.payroll.paidDate || today()),
   localError = ref("");
 const paymentAmount = ref<string | null>(
   francs(props.payroll.paidAmount ?? props.payroll.result.net),
 );
 draft.value.terms.workDays ??= "5";
 const initialInput = JSON.stringify(draft.value);
+const isPaid = ref(!!props.payroll.paidDate);
+const paymentChanged = computed(
+  () =>
+    isPaid.value !== !!props.payroll.paidDate ||
+    (isPaid.value &&
+      (payment.value !== props.payroll.paidDate ||
+        paymentAmount.value !==
+          francs(props.payroll.paidAmount ?? props.payroll.result.net))),
+);
+const dirty = computed(() => JSON.stringify(draft.value) !== initialInput);
+function togglePaid() {
+  if (isPaid.value && !props.payroll.paidDate) {
+    payment.value = today();
+    paymentAmount.value = result.value.errors.length
+      ? null
+      : francs(result.value.net);
+  }
+}
+function save() {
+  emit(
+    "save",
+    payload(),
+    paymentChanged.value
+      ? {
+          date: isPaid.value ? payment.value : "",
+          amount: isPaid.value ? paymentAmount.value : null,
+        }
+      : undefined,
+  );
+}
 const leaveTarget = ref<"close" | "settings" | string>("");
 const leavePrompt = ref(false);
 function requestLeave(target = "close") {
-  if (JSON.stringify(draft.value) !== initialInput) {
+  if (dirty.value || paymentChanged.value) {
     leaveTarget.value = target;
     leavePrompt.value = true;
   } else leave(target);
@@ -59,23 +84,31 @@ function leave(target: string) {
 }
 const addressesMissing = computed(
   () =>
-    !addressReady(draft.value.company) || !addressReady(draft.value.employee),
+    !draft.value.company.name.trim() ||
+    !addressReady(draft.value.company) ||
+    !addressReady(draft.value.employee),
 );
 const conditionsOpen = ref(false);
-const correctionMode = ref(false);
-const correctionPrompt = ref(false);
 const result = computed(() =>
-  editing.value
-    ? calculate(
-        draft.value.employee,
-        draft.value.terms,
-        draft.value.rules,
-        draft.value.input,
-        draft.value.period,
-        props.state.payrolls,
-      )
-    : draft.value.result,
+  calculate(
+    draft.value.employee,
+    draft.value.terms,
+    draft.value.rules,
+    draft.value.input,
+    draft.value.period,
+    props.state.payrolls,
+  ),
 );
+const canGenerate = computed(
+  () =>
+    !result.value.errors.length &&
+    !earlier.value.length &&
+    !addressesMissing.value,
+);
+const paymentDifference = computed(() => {
+  if (draft.value.paidAmount == null || result.value.errors.length) return null;
+  return result.value.net - draft.value.paidAmount;
+});
 const earlier = computed(() => missingEarlier(props.state, draft.value));
 const revisions = computed(() =>
   props.state.revisions
@@ -135,7 +168,7 @@ function current() {
 function payload() {
   return {
     ...clone(draft.value),
-    issued: editing.value ? false : draft.value.issued,
+    issued: !dirty.value && draft.value.issued,
     result: clone(result.value),
   };
 }
@@ -157,12 +190,16 @@ function payload() {
     </div>
     <div class="drawer-subtitle">
       {{ periodLabel(draft.period) }}
-      <span class="badge" :class="editing ? 'amber' : 'green'">{{
-        tr(editing ? "draft" : "complete")
-      }}</span>
+      <span
+        class="badge"
+        :class="!canGenerate ? 'amber' : dirty ? 'neutral' : 'green'"
+        >{{
+          tr(!canGenerate ? "toComplete" : dirty ? "unsaved" : "payrollReady")
+        }}</span
+      >
     </div>
     <p v-if="localError" class="notice error" role="alert">{{ localError }}</p>
-    <div class="pay-hero">
+    <div class="pay-hero payroll-summary">
       <span>{{ tr("net") }}</span
       ><strong
         >{{ result.errors.length ? "—" : money(result.net) }}
@@ -180,8 +217,8 @@ function payload() {
         >
       </div>
     </div>
-    <template v-if="editing"
-      ><div class="notice error" v-if="result.errors.length">
+    <div class="payroll-fields">
+      <div class="notice error" v-if="result.errors.length">
         <strong>{{ tr("helpMissing") }}</strong>
         <ul>
           <li v-for="err in result.errors" :key="err">{{ tr(err) }}</li>
@@ -203,7 +240,7 @@ function payload() {
       <div class="notice" v-if="addressesMissing">
         <p>{{ tr("addressMissing") }}</p>
         <button
-          v-if="!addressReady(draft.company)"
+          v-if="!draft.company.name.trim() || !addressReady(draft.company)"
           class="text-button"
           @click="requestLeave('company')"
         >
@@ -245,7 +282,6 @@ function payload() {
           {{ tr("completeConditions") }}
         </button>
       </p>
-      <p class="notice" v-if="correctionMode">{{ tr("correctionsNotice") }}</p>
       <p class="notice" v-for="warning in result.warnings" :key="warning">
         {{ tr(warning) }}
       </p>
@@ -260,107 +296,153 @@ function payload() {
             : undefined
         "
         placeholder="—"
-        inputmode="decimal" />
-      <div v-else class="salary-line">
-        <span>{{ tr("monthlySalary") }}</span
-        ><strong>{{ decimalText(draft.terms.salary) }} CHF</strong>
-      </div>
-      <div v-for="el in draft.input.elements" :key="el.id" class="element">
-        <header>
-          <h3>{{ tr(el.kind) }}</h3>
-          <button
-            class="icon-button"
-            :aria-label="tr('remove')"
-            @click="
-              draft.input.elements = draft.input.elements.filter(
-                (x) => x.id !== el.id,
-              )
-            "
-          >
-            <Trash2 :size="16" />
-          </button>
-        </header>
-        <Field v-model="el.label" :label="tr('label')" />
-        <div class="form-grid" v-if="el.kind !== 'adjustment'">
-          <Field
-            v-model="el.quantity"
-            :label="tr('quantity')"
-            inputmode="decimal"
-          /><label class="field"
-            ><span>{{ tr("unit") }}</span
-            ><select v-model="el.unit">
-              <option value="hours">{{ tr("hoursUnit") }}</option>
-              <option v-if="el.kind === 'absence'" value="days">
-                {{ tr("days") }}
-              </option>
-            </select></label
-          >
-        </div>
-        <div class="form-grid" v-if="el.kind === 'overtime'">
-          <Field
-            v-model="el.rate"
-            :label="tr('rate')"
-            inputmode="decimal"
-          /><Field
-            v-model="el.premium"
-            :label="tr('premium')"
-            inputmode="decimal"
-          />
-        </div>
-        <template v-if="el.kind === 'absence'"
-          ><label class="check"
-            ><input type="checkbox" v-model="el.paid" />{{
-              tr("paidAbsence")
-            }}</label
-          ><template v-if="!el.paid"
+        inputmode="decimal"
+      />
+      <Field
+        v-else
+        v-model="draft.terms.salary"
+        :label="tr('monthSalaryEdit')"
+        :hint="tr('monthSalaryEditHelp')"
+        inputmode="decimal"
+      />
+      <details class="form-section payroll-extras">
+        <summary>{{ tr("payrollExtras") }}</summary>
+        <div v-for="el in draft.input.elements" :key="el.id" class="element">
+          <header>
+            <h3>{{ tr(el.kind) }}</h3>
+            <button
+              class="icon-button"
+              :aria-label="tr('remove')"
+              @click="
+                draft.input.elements = draft.input.elements.filter(
+                  (x) => x.id !== el.id,
+                )
+              "
+            >
+              <Trash2 :size="16" />
+            </button>
+          </header>
+          <Field v-model="el.label" :label="tr('label')" />
+          <div class="form-grid" v-if="el.kind !== 'adjustment'">
+            <Field
+              v-model="el.quantity"
+              :label="tr('quantity')"
+              inputmode="decimal"
+            /><label class="field"
+              ><span>{{ tr("unit") }}</span
+              ><select v-model="el.unit">
+                <option value="hours">{{ tr("hoursUnit") }}</option>
+                <option v-if="el.kind === 'absence'" value="days">
+                  {{ tr("days") }}
+                </option>
+              </select></label
+            >
+          </div>
+          <div class="form-grid" v-if="el.kind === 'overtime'">
+            <Field
+              v-model="el.rate"
+              :label="tr('rate')"
+              inputmode="decimal"
+            /><Field
+              v-model="el.premium"
+              :label="tr('premium')"
+              inputmode="decimal"
+            />
+          </div>
+          <template v-if="el.kind === 'absence'"
+            ><label class="check"
+              ><input type="checkbox" v-model="el.paid" />{{
+                tr("paidAbsence")
+              }}</label
+            ><template v-if="!el.paid"
+              ><Field
+                v-model="el.amount"
+                :label="tr('deductAmount')"
+                inputmode="decimal"
+              /><button class="text-button" @click="propose(el)">
+                {{ tr("proposeAbsence") }}
+              </button>
+              <p class="hint">{{ tr("absenceHelp") }}</p></template
+            ></template
+          ><template v-if="el.kind === 'adjustment'"
             ><Field
               v-model="el.amount"
-              :label="tr('deductAmount')"
+              :label="tr('amount')"
               inputmode="decimal"
-            /><button class="text-button" @click="propose(el)">
-              {{ tr("proposeAbsence") }}
+            /><label class="check"
+              ><input type="checkbox" v-model="el.avs" />{{
+                tr("avsSubject")
+              }}</label
+            ><label class="check"
+              ><input type="checkbox" v-model="el.laa" />{{
+                tr("laaSubject")
+              }}</label
+            ></template
+          ><label
+            class="check"
+            v-if="draft.terms.thirteen && el.kind !== 'absence'"
+            ><input type="checkbox" v-model="el.thirteen" />{{
+              tr("thirteenSubject")
+            }}</label
+          >
+        </div>
+        <div class="add-element">
+          <button class="button secondary" @click="adding = !adding">
+            <Plus :size="16" />{{ tr("addElement") }}
+          </button>
+          <div v-if="adding" class="inline-actions">
+            <button
+              v-for="kind in ['overtime', 'absence', 'adjustment'] as const"
+              :key="kind"
+              class="button secondary"
+              @click="add(kind)"
+            >
+              {{ tr(kind) }}
             </button>
-            <p class="hint">{{ tr("absenceHelp") }}</p></template
-          ></template
-        ><template v-if="el.kind === 'adjustment'"
-          ><Field
-            v-model="el.amount"
-            :label="tr('amount')"
-            inputmode="decimal"
-          /><label class="check"
-            ><input type="checkbox" v-model="el.avs" />{{
-              tr("avsSubject")
-            }}</label
-          ><label class="check"
-            ><input type="checkbox" v-model="el.laa" />{{
-              tr("laaSubject")
-            }}</label
-          ></template
-        ><label
-          class="check"
-          v-if="draft.terms.thirteen && el.kind !== 'absence'"
-          ><input type="checkbox" v-model="el.thirteen" />{{
-            tr("thirteenSubject")
-          }}</label
+          </div>
+        </div>
+        <Field v-model="draft.input.note" :label="tr('note')" />
+      </details>
+    </div>
+    <section class="form-section payroll-payment">
+      <h3>{{ tr("payment") }}</h3>
+      <div v-if="paymentDifference" class="notice" role="status">
+        {{ tr(paymentDifference > 0 ? "payrollRemaining" : "payrollOverpaid") }}
+        : <strong>{{ money(Math.abs(paymentDifference)) }} CHF</strong>
+        <small
+          >{{ tr("payrollRecorded") }} :
+          {{ money(draft.paidAmount!) }} CHF</small
         >
       </div>
-      <div class="add-element">
-        <button class="button secondary" @click="adding = !adding">
-          <Plus :size="16" />{{ tr("addElement") }}
-        </button>
-        <div v-if="adding" class="inline-actions">
-          <button
-            v-for="kind in ['overtime', 'absence', 'adjustment'] as const"
-            :key="kind"
-            class="button secondary"
-            @click="add(kind)"
-          >
-            {{ tr(kind) }}
-          </button>
+      <p
+        v-else-if="draft.paidAmount != null && result.errors.length"
+        class="notice"
+      >
+        {{ tr("payrollPaymentIncomplete") }}
+      </p>
+      <label class="check"
+        ><input type="checkbox" v-model="isPaid" @change="togglePaid" />{{
+          tr("payrollPaid")
+        }}</label
+      >
+      <template v-if="isPaid">
+        <div class="form-grid">
+          <Field
+            v-model="paymentAmount"
+            inputmode="decimal"
+            :label="tr('paidAmount')"
+          />
+          <Field v-model="payment" type="date" :label="tr('paymentDate')" />
         </div>
-      </div>
+        <p class="hint">{{ tr("paymentHelp") }}</p>
+      </template>
+    </section>
+    <details class="form-section payroll-advanced" :open="conditionsOpen">
+      <summary>{{ tr("payrollAdvanced") }}</summary>
       <details class="form-section">
-        <summary>{{ tr("prorata") }} · {{ result.prorata }}</summary>
+        <summary>
+          {{ tr("prorata") }} · {{ decimalText(result.prorata) }}
+        </summary>
         <p class="hint">{{ tr("prorataHelp") }}</p>
         <template v-if="draft.terms.mode === 'monthly'"
           ><Field
@@ -392,100 +474,40 @@ function payload() {
           :contributions="draft.rules.contributions"
         />
       </details>
-      <Field v-model="draft.input.note" :label="tr('note')"
-    /></template>
-    <details class="form-section">
-      <summary>{{ tr("details") }}</summary>
-      <div class="calc-line" v-for="line in result.lines" :key="line.id">
-        <div>
-          <strong>{{ tr(line.label) }}</strong
-          ><small
-            >{{ tr("base") }} {{ decimalText(line.base) }} CHF ·
-            {{ decimalText(line.quantity) }} ×
-            {{ decimalText(line.rate) || "—" }} ·
-            {{
-              /^https:\/\//.test(line.origin)
-                ? tr("sourcePreset")
-                : tr(line.origin)
-            }}</small
-          >
+      <details class="form-section">
+        <summary>{{ tr("details") }}</summary>
+        <div class="calc-line" v-for="line in result.lines" :key="line.id">
+          <div>
+            <strong>{{ tr(line.label) }}</strong
+            ><small
+              >{{ tr("base") }} {{ decimalText(line.base) }} CHF ·
+              {{ decimalText(line.quantity) }} ×
+              {{ decimalText(line.rate) || "—" }} ·
+              {{
+                /^https:\/\//.test(line.origin)
+                  ? tr("sourcePreset")
+                  : tr(line.origin)
+              }}</small
+            >
+          </div>
+          <span>{{ money(line.amount) }}</span>
         </div>
-        <span>{{ money(line.amount) }}</span>
-      </div>
-      <div v-if="draft.terms.thirteen" class="form-grid">
-        <p>
-          {{ tr("acquired") }}<br /><b
-            >{{ d(result.accrual).toFixed(2) }} CHF</b
-          >
-        </p>
-        <p>
-          {{ tr("balance") }}<br /><b
-            >{{ d(result.thirteenBalance).toFixed(2) }} CHF</b
-          >
-        </p>
-      </div>
+        <div v-if="draft.terms.thirteen" class="form-grid">
+          <p>
+            {{ tr("acquired") }}<br /><b
+              >{{ d(result.accrual).toFixed(2) }} CHF</b
+            >
+          </p>
+          <p>
+            {{ tr("balance") }}<br /><b
+              >{{ d(result.thirteenBalance).toFixed(2) }} CHF</b
+            >
+          </p>
+        </div>
+      </details>
     </details>
-    <section class="form-section">
-      <h3>{{ tr("payment") }}</h3>
-      <p class="hint">{{ tr("paymentHelp") }}</p>
-      <p class="notice" v-if="draft.paymentReview">{{ tr("paymentReview") }}</p>
-      <div class="inline-actions">
-        <Field
-          v-model="paymentAmount"
-          inputmode="decimal"
-          :label="tr('paidAmount')"
-        />
-        <Field
-          v-model="payment"
-          type="date"
-          :label="tr('paymentDate')"
-        /><button
-          class="button secondary"
-          :disabled="
-            busy || !payment || paymentAmount == null || paymentAmount === ''
-          "
-          @click="emit('payment', draft.id, payment, paymentAmount)"
-        >
-          {{ tr("markPaid") }}
-        </button>
-      </div>
-      <button
-        v-if="draft.paidDate"
-        class="text-button"
-        :disabled="busy"
-        @click="emit('payment', draft.id, '', null)"
-      >
-        {{ tr("clearPayment") }}
-      </button>
-      <button
-        v-if="!editing"
-        class="button secondary"
-        @click="correctionPrompt = true"
-      >
-        {{ tr("correction") }}
-      </button>
-      <div v-if="correctionPrompt" class="notice" role="alert">
-        <p>{{ tr("correctionsNotice") }}</p>
-        <div class="inline-actions">
-          <button class="button secondary" @click="correctionPrompt = false">
-            {{ tr("cancel") }}</button
-          ><button
-            class="button primary"
-            @click="
-              editing = true;
-              correctionMode = true;
-              correctionPrompt = false;
-            "
-          >
-            {{ tr("correction") }}
-          </button>
-        </div>
-      </div>
-      <p class="hint">{{ tr("correctionHelp") }}</p>
-    </section>
-    <section class="form-section">
-      <h3>{{ tr("history") }}</h3>
-      <p v-if="!revisions.length" class="hint">{{ tr("noRevision") }}</p>
+    <details v-if="revisions.length" class="form-section payroll-history">
+      <summary>{{ tr("history") }}</summary>
       <div class="history-item" v-for="r in revisions" :key="r.id">
         <span
           >r{{ r.number }} · {{ r.created.slice(0, 10) }} ·
@@ -507,35 +529,59 @@ function payload() {
           </button>
         </div>
       </div>
-    </section>
-    <template #footer
-      ><p class="footer-help" v-if="editing">{{ tr("issueHelp") }}</p>
+    </details>
+    <template #footer>
+      <p v-if="!canGenerate" class="footer-help">
+        {{ tr("payrollSaveIncomplete") }}
+      </p>
       <button
         class="button secondary"
         @click="emit('preview', payload())"
         :disabled="busy || result.errors.length > 0"
       >
-        <FileText :size="16" />{{ tr("preview") }}</button
-      ><button
-        v-if="editing"
-        class="button secondary"
-        :disabled="busy"
-        @click="emit('save', payload())"
-      >
-        {{ tr("saveDraft") }}</button
-      ><button
-        v-if="editing"
+        <FileText :size="16" />{{ tr("preview") }}
+      </button>
+      <button
         class="button primary"
         :disabled="
           busy ||
-          result.errors.length > 0 ||
-          earlier.length > 0 ||
-          addressesMissing
+          (isPaid &&
+            (!payment || paymentAmount == null || paymentAmount === '')) ||
+          (!dirty && !paymentChanged && draft.issued && !draft.needsReview)
         "
-        @click="emit('issue', payload())"
+        @click="save"
       >
-        {{ tr("issue") }}
-      </button></template
-    ></Modal
-  >
+        {{ tr("save") }}
+      </button>
+    </template>
+  </Modal>
 </template>
+<style scoped>
+.payroll-summary {
+  padding: 18px 20px;
+}
+.payroll-fields .form-section,
+.payroll-payment,
+.payroll-advanced,
+.payroll-history {
+  padding: 16px 0;
+  margin-top: 16px;
+}
+.drawer-subtitle .badge {
+  text-transform: none;
+}
+
+.payroll-payment .notice small {
+  display: block;
+  margin-top: 4px;
+}
+.payroll-extras .add-element {
+  margin-top: 16px;
+}
+.payroll-extras > .field {
+  margin-top: 16px;
+}
+.payroll-history .history-item:first-of-type {
+  margin-top: 16px;
+}
+</style>

@@ -81,8 +81,8 @@ Open `http://127.0.0.1:1420`. The web preview uses demo data stored in IndexedDB
 2. **Complete the setup guide.** Enter company details, confirm the relevant fund and configure insurance rates. Missing accident-insurance rates block issuance, while drafts remain available. Pension contributions are set per employee.
 3. **Add an employee** through identity, contract and salary, insurance, and review. The monthly salary is the actual amount due at the displayed employment percentage.
 4. **Work through the year.** Edit salary or hours, add supplements and expenses, and open any month for details. Forecast months are excluded from saved totals until recorded. Earlier months needed for cumulative calculations are prepared automatically for that employee.
-5. **Generate a payslip.** Earlier calculation inputs must be complete; their PDFs do not need to have been issued first.
-6. **Record payments.** Enter the amount paid and date. Corrections preserve those entries and show any difference requiring review. The app does not initiate a bank transfer.
+5. **Edit and save.** Open a month, change the salary or hours, then save. Complete entries automatically update the payslip PDF; incomplete entries remain available to finish later. Earlier calculation inputs must be complete; their PDFs do not need to have been issued first.
+6. **Record payments.** Tick Payment made, enter the amount and date, then use the same Save button. Salary changes preserve those entries and show the remaining or overpaid amount. The app does not initiate a bank transfer.
 7. **Review changes and export.** Shared data updates recalculate affected payrolls while preserving monthly exceptions. Original issued PDFs remain in history; outdated documents and annual exports are flagged for regeneration.
 
 The monthly overview provides a balanced accounting CSV with account numbers to assign. The annual summary provides CSV/Excel exports and the official salary certificate. Shared contribution settings apply to the selected year; there is no separate effective-month selector in the current workflow.
