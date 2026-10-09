@@ -71,3 +71,21 @@ Cette section remplace les comportements historiques décrits plus haut pour les
 - Preuves : `output/playwright/v2/` (captures des palettes, mobile, pages, capture native et `result.json`) ; anciennes suites dans `output/qa/`. Source avant V2 copiée dans `/tmp/easy-salaires-before-v2-20261009/`.
 
 Pas de commit ni push : le dossier fourni n’est pas un dépôt Git. Les limites Windows, signature et notarisation restent celles indiquées plus haut.
+
+## Distribution et mises à jour — 9 octobre 2026
+
+Version publique publiée : [**0.1.0**](https://github.com/DwennK/Easy-Salaires/releases/tag/v0.1.0). Deux cibles seulement : Apple Silicon (`aarch64-apple-darwin`) et Windows x64 (`x86_64-pc-windows-msvc`). Le workflow crée d’abord un brouillon et ne publie le manifeste des mises à jour qu’après réussite des deux cibles et vérification des signatures.
+
+- Local : `pnpm check` réussi, **66 tests TypeScript** ; **7 tests Rust** réussis. Workflow contrôlé avec `actionlint`.
+- `pnpm test:updater` : Chrome isolé, **1440 × 1000** et **390 × 844**, zéro erreur JavaScript. IPC natif simulé pour les états disponible/à jour/hors ligne, progression, échec d’installation, reprise et blocage des paramètres non enregistrés. Les captures attendent la fin des animations.
+- Signature réelle produite par Tauri : vérification Ed25519, commentaire signé et version ; un fichier modifié est rejeté. La version est aussi vérifiée avec des fichiers CRLF, pour couvrir le checkout Windows.
+- Contrôle natif macOS 27 sur l’identifiant isolé `ch.easysalaires.updateqa`, avec une mise à jour locale signée **0.0.8 → 0.0.9**. La sauvegarde précède le téléchargement ; le paquet remplace l’application. Le nouveau processus porte bien la version 0.0.9. La base de démonstration et les sauvegardes ont `integrity_check = ok` et des exports SQL identiques à l’état initial, PDF compris.
+- La réouverture de la fenêtre après le redémarrage automatique n’a pas pu être confirmée par Computer Use ; la fermeture puis réouverture explicite a affiché correctement 0.0.9 avec les données conservées. Un premier essai dans le dossier de compilation est resté bloqué dans le remplacement macOS (`renamex_np`) ; l’installation a réussi depuis un dossier temporaire. Le parcours de distribution demande de déplacer l’app dans Applications.
+- Le serveur HTTP sur loopback et les versions 0.0.8/0.0.9 sont des fixtures de contrôle locales, ignorées par Git. La configuration publiée reste HTTPS, avec signature et version signée obligatoires.
+- Les tests de paie et de stockage ont aussi réussi sur les runners GitHub macOS et Windows. Une première construction Windows a atteint l’installateur, puis le contrôle de version a révélé un problème de fins de ligne CRLF ; le parseur a été corrigé avant publication.
+
+Preuves locales : `output/playwright/updater/` et `output/qa/updater/`. Les essais utilisent exclusivement la démonstration ; aucun dossier réel n’a été modifié. La validation interactive d’un installateur ou d’une mise à jour Windows reste à réaliser sur Windows. Les signatures Tauri ne remplacent pas les certificats de distribution Apple/Microsoft ni la notarisation Apple.
+
+Publication confirmée par le [workflow GitHub réussi](https://github.com/DwennK/Easy-Salaires/actions/runs/37872769288). Les deux installateurs, les deux signatures et l’archive de mise à jour macOS sont présents. `node scripts/release.mjs verify v0.1.0` vérifie les signatures des fichiers téléchargés ; le manifeste public `latest.json` annonce exactement `darwin-aarch64` et `windows-x86_64`, version 0.1.0. Le binaire macOS téléchargé est ARM64 et sa signature ad hoc passe `codesign --verify --deep --strict`.
+
+Après publication, le bouton de contrôle natif de la copie QA (0.0.9) a détecté la vraie release GitHub **0.1.0** et affiché « Installer et redémarrer ». Aucun paquet de production n’a été installé sur le dossier de test ni sur l’application habituelle pendant ce contrôle.
