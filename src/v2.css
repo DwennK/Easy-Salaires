@@ -630,6 +630,11 @@ select:focus-visible {
   text-align: right;
   color: var(--muted);
 }
+.payroll-pdf-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
 .pdf-action {
   background: var(--surface);
   border: 1px solid var(--border);

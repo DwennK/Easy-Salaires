@@ -13,14 +13,19 @@ import {
   mergePdfs,
 } from "../src/lib/documents";
 import { toBase64 } from "../src/lib/bridge";
+import { savePayroll } from "../src/domain/service";
 const load = async (path: string) =>
   new Uint8Array(await readFile(`public${path}`));
 it("generates deterministic embedded-font PDFs and a merged monthly export", async () => {
   const s = demoState(),
     p = s.payrolls[0]!;
-  const a = await payslipPdf(p, 1, "fr", load),
-    b = await payslipPdf(p, 1, "fr", load);
+  const issuedAt = "2026-10-08T22:30:00.000Z";
+  const a = await payslipPdf(p, 1, "fr", load, false, issuedAt),
+    b = await payslipPdf(p, 1, "fr", load, false, issuedAt);
   expect(a).toEqual(b);
+  expect((await PDFDocument.load(a)).getCreationDate()?.toISOString()).toBe(
+    issuedAt,
+  );
   const en = await payslipPdf(p, 1, "en", load);
   expect((await PDFDocument.load(a)).getPageCount()).toBe(1);
   expect((await PDFDocument.load(en)).getPageCount()).toBe(1);
@@ -47,6 +52,53 @@ it("paginates long addresses and many lines", async () => {
   expect((await PDFDocument.load(bytes)).getPageCount()).toBeGreaterThan(2);
   await mkdir("output/qa", { recursive: true });
   await writeFile("output/qa/payslip-long.pdf", bytes);
+}, 20000);
+it("keeps salary, thirteenth-pay and expense layouts on A4 without changing payroll snapshots", async () => {
+  const s = demoState();
+  const expenses = structuredClone(s.payrolls[0]!);
+  expenses.input.elements.push({
+    id: "expenses",
+    kind: "adjustment",
+    label: "Frais de déplacement",
+    amount: "125.50",
+    quantity: "1",
+    unit: "hours",
+    rate: "0",
+    premium: "0",
+    paid: true,
+    avs: false,
+    laa: false,
+    thirteen: false,
+    reimbursement: true,
+  });
+  const saved = savePayroll(s, expenses);
+  saved.employee.iban = "CH93 0076 2011 6238 5295 7";
+  saved.employee.avs = "756.0000.0000.00";
+  saved.company.logo = `data:image/png;base64,${(await readFile("src/assets/app-icon.png")).toString("base64")}`;
+  const cases = [
+    saved,
+    s.payrolls.find(
+      (p) => p.period === "2025-10" && p.employee.firstName === "Alex",
+    )!,
+    s.payrolls.find(
+      (p) => p.period === "2025-12" && p.employee.firstName === "Léa",
+    )!,
+  ];
+  await mkdir("output/qa", { recursive: true });
+  for (const [i, p] of cases.entries()) {
+    const before = JSON.stringify(p);
+    for (const language of ["fr", "en"] as const) {
+      const bytes = await payslipPdf(p, 2, language, load, true);
+      const document = await PDFDocument.load(bytes);
+      expect(document.getPageCount()).toBe(1);
+      expect(document.getPage(0).getSize()).toEqual({
+        width: 595.28,
+        height: 841.89,
+      });
+      expect(JSON.stringify(p)).toBe(before);
+      await writeFile(`output/qa/payslip-layout-${i}-${language}.pdf`, bytes);
+    }
+  }
 }, 20000);
 it("keeps spreadsheet amounts numeric and neutralizes formula injection", async () => {
   const s = demoState();

@@ -513,6 +513,12 @@ async function annualPayment(
     notify("saved");
   });
 }
+async function annualPreview(id: string, selected: string) {
+  await run(async () => {
+    const s = clone(state.value!);
+    await showPreview(ensurePayroll(s, id, selected));
+  });
+}
 async function annualPdf(id: string, selected: string) {
   await run(async () => {
     const s = clone(state.value!);
@@ -523,7 +529,14 @@ async function annualPdf(id: string, selected: string) {
     let revision = previous;
     if (!p.issued || !previous) {
       const n = (previous?.number ?? 0) + 1;
-      const bytes = await payslipPdf(p, n, s.company.lang);
+      const bytes = await payslipPdf(
+        p,
+        n,
+        s.company.lang,
+        undefined,
+        false,
+        new Date().toISOString(),
+      );
       revision = issueRevision(s, p, toBase64(bytes));
       await commit(s);
     }
@@ -547,7 +560,14 @@ async function payrollSave(p: Payroll, issue = false) {
     const saved = savePayroll(s, p);
     if (issue) {
       const n = s.revisions.filter((r) => r.payrollId === p.id).length + 1;
-      const pdf = await payslipPdf(saved, n, s.company.lang);
+      const pdf = await payslipPdf(
+        saved,
+        n,
+        s.company.lang,
+        undefined,
+        false,
+        new Date().toISOString(),
+      );
       issueRevision(s, saved, toBase64(pdf));
     }
     await commit(s);
@@ -570,25 +590,27 @@ function closePreview() {
   previewUrl.value = "";
 }
 async function preview(p: Payroll) {
-  await run(async () => {
-    const originals = state
-      .value!.revisions.filter((r) => r.payrollId === p.id)
-      .sort((a, b) => b.number - a.number);
-    const bytes =
-      p.issued && originals[0]
-        ? fromBase64(originals[0].pdf)
-        : await payslipPdf(
-            p,
-            originals.length + 1,
-            state.value!.company.lang,
-            undefined,
-            true,
-          );
-    if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
-    previewUrl.value = URL.createObjectURL(
-      new Blob([bytes as BlobPart], { type: "application/pdf" }),
-    );
-  });
+  await run(() => showPreview(p));
+}
+async function showPreview(p: Payroll) {
+  const originals = state
+    .value!.revisions.filter((r) => r.payrollId === p.id)
+    .sort((a, b) => b.number - a.number);
+  const bytes =
+    p.issued && originals[0]
+      ? fromBase64(originals[0].pdf)
+      : await payslipPdf(
+          p,
+          originals.length + 1,
+          state.value!.company.lang,
+          undefined,
+          true,
+          new Date().toISOString(),
+        );
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
+  previewUrl.value = URL.createObjectURL(
+    new Blob([bytes as BlobPart], { type: "application/pdf" }),
+  );
 }
 async function original(r: Revision, print: boolean) {
   await run(async () => {
@@ -949,6 +971,7 @@ onMounted(() =>
             @add-employee="employeeEdit = employeeDefaults()"
             @detail="employeePayroll"
             @pdf="annualPdf"
+            @preview="annualPreview"
             @cell="annualCell"
             @extras="annualExtras"
             @payment="annualPayment"

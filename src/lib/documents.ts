@@ -1,17 +1,13 @@
 import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import type { Payroll, Lang, State, Employee } from "../domain/types";
-import { francs, money, sum } from "../domain/money";
+import { francs, money, sum, formatNumber } from "../domain/money";
 import { tr, periodLabel } from "./i18n";
 import { annualRows } from "../domain/service";
 import { fromBase64, safeName, toBase64 } from "./bridge";
 export type Loader = (path: string) => Promise<Uint8Array>;
 const loader: Loader = async (path) =>
   new Uint8Array(await (await fetch(path)).arrayBuffer());
-const ink = rgb(0.13, 0.19, 0.17),
-  green = rgb(0.09, 0.3, 0.23),
-  muted = rgb(0.43, 0.47, 0.45),
-  lineColor = rgb(0.84, 0.87, 0.85);
 function wrap(
   text: string,
   font: PDFFont,
@@ -46,218 +42,395 @@ export async function payslipPdf(
   l: Lang,
   load: Loader = loader,
   draft = false,
+  issuedAt = p.updated,
 ): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   pdf.registerFontkit(fontkit);
   const font = await pdf.embedFont(await load("/fonts/NotoSans-Regular.ttf"), {
     subset: true,
   });
+  const bold = await pdf.embedFont(await load("/fonts/NotoSans-SemiBold.ttf"), {
+    subset: true,
+  });
   pdf.setTitle(`${tr("payroll", l)} ${p.period} ${p.employee.lastName}`);
   pdf.setProducer("Easy Salaires");
   pdf.setCreator("Easy Salaires");
-  pdf.setCreationDate(new Date(p.updated));
-  pdf.setModificationDate(new Date(p.updated));
+  pdf.setCreationDate(new Date(issuedAt));
+  pdf.setModificationDate(new Date(issuedAt));
+
+  const left = 54,
+    rightEdge = 541.28,
+    width = rightEdge - left;
+  const ink = rgb(0.12, 0.17, 0.21);
+  const blue = rgb(0.12, 0.17, 0.21);
+  const muted = rgb(0.36, 0.42, 0.47);
+  const rule = rgb(0.4, 0.44, 0.46);
+  const employeeName = `${p.employee.firstName} ${p.employee.lastName}`;
+  const period = periodLabel(p.period, l);
   let page!: PDFPage,
     y = 0;
   const pages: PDFPage[] = [];
-  const text = (value: string, x: number, at: number, size = 10, color = ink) =>
-    page.drawText(value, { x, y: at, size, font, color });
+  const text = (
+    value: string,
+    x: number,
+    at: number,
+    size = 9.5,
+    color = ink,
+    face = font,
+  ) => page.drawText(value, { x, y: at, size, font: face, color });
   const right = (
     value: string,
     x: number,
     at: number,
-    size = 10,
+    size = 9.5,
     color = ink,
-  ) => text(value, x - font.widthOfTextAtSize(value, size), at, size, color);
+    face = font,
+  ) =>
+    text(value, x - face.widthOfTextAtSize(value, size), at, size, color, face);
+  const line = (at: number) =>
+    page.drawLine({
+      start: { x: left, y: at },
+      end: { x: rightEdge, y: at },
+      thickness: 0.6,
+      color: rule,
+    });
   const addPage = () => {
     page = pdf.addPage([595.28, 841.89]);
     pages.push(page);
-    y = 790;
-    text("Easy Salaires", 42, 806, 8, muted);
-    text(
-      `${periodLabel(p.period, l)} · ${tr("revision", l)} ${revision}`,
-      350,
-      806,
-      8,
-      muted,
-    );
-  };
-  const ensure = (space: number) => {
-    if (y - space < 65) {
-      addPage();
+    y = 791;
+    if (pages.length > 1) {
+      text(tr("payroll", l), left, y, 13, ink, bold);
+      right(period, rightEdge, y, 10, blue, bold);
+      y -= 20;
+      for (const ln of wrap(employeeName, font, 9, width)) {
+        text(ln, left, y, 9, muted);
+        y -= 13;
+      }
+      if (draft) {
+        text(tr("draftPdf", l), left, y, 8, blue, bold);
+        y -= 15;
+      }
+      line(y - 2);
       y -= 25;
     }
   };
-  const paragraph = (value: string, x: number, width: number, size = 10) => {
-    for (const ln of wrap(value, font, size, width)) {
+  const ensure = (space: number) => {
+    if (y - space < 70) addPage();
+  };
+  const paragraph = (
+    value: string,
+    x: number,
+    maxWidth: number,
+    size = 9.5,
+    color = ink,
+    face = font,
+  ) => {
+    for (const ln of wrap(value, face, size, maxWidth)) {
       ensure(size + 6);
-      text(ln, x, y, size);
+      text(ln, x, y, size, color, face);
       y -= size + 5;
     }
   };
   addPage();
-  y = 756;
-  text(p.company.name, 42, y, 18, green);
-  y -= 24;
-  paragraph(
-    [
-      p.company.address,
-      `${p.company.postal} ${p.company.city}`,
-      p.company.country,
-      p.company.uid,
-      p.company.contact,
-    ]
-      .filter(Boolean)
-      .join("\n"),
-    42,
-    290,
-    9,
-  );
+  const editionDate = new Intl.DateTimeFormat(l === "fr" ? "fr-CH" : "en-CH", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/Zurich",
+  }).format(new Date(issuedAt));
+  right(`${tr("payslipIssuedOn", l)} ${editionDate}`, rightEdge, 777, 8, muted);
+  let hasLogo = false;
   if (p.company.logo) {
     try {
       const bytes = fromBase64(p.company.logo.split(",")[1]!);
       const img = p.company.logo.startsWith("data:image/png")
         ? await pdf.embedPng(bytes)
         : await pdf.embedJpg(bytes);
-      const dim = img.scaleToFit(80, 70);
-      page!.drawImage(img, {
-        x: 475,
-        y: 720,
+      const dim = img.scaleToFit(122, 52);
+      page.drawImage(img, {
+        x: left,
+        y: 797 - dim.height,
         width: dim.width,
         height: dim.height,
       });
+      hasLogo = true;
     } catch {
-      /* Imported image validation happens in the UI; text remains printable. */
+      /* An invalid imported logo must not prevent a readable payslip. */
     }
   }
-  y = Math.min(y - 25, 620);
-  text(tr("payroll", l), 42, y, 24, green);
-  y -= 24;
-  text(periodLabel(p.period, l), 42, y, 12);
-  y -= 25;
-  paragraph(
-    `${p.employee.firstName} ${p.employee.lastName}\n${p.employee.address}\n${p.employee.postal} ${p.employee.city}`,
-    330,
-    220,
-    10,
-  );
-  y -= 8;
-  if (p.employee.avs) {
-    text(`${tr("avsNumber", l)} : ${p.employee.avs}`, 42, y, 9);
-    y -= 17;
+  if (!hasLogo) {
+    y = 775;
+    paragraph(p.company.name, left, 275, 15, ink, bold);
   }
+  y = Math.min(y - 26, 710);
+  const employer = [
+    ...wrap(p.company.name, bold, 9.5, 245).map((value) => ({
+      value,
+      strong: true,
+    })),
+    ...wrap(
+      [
+        p.company.address,
+        `${p.company.postal} ${p.company.city}`.trim(),
+        [p.company.country, p.company.uid].filter(Boolean).join(" · "),
+        p.company.contact,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      font,
+      9,
+      245,
+    ).map((value) => ({ value, strong: false })),
+  ];
+  const recipient = [
+    ...wrap(employeeName, bold, 9.5, 205).map((value) => ({
+      value,
+      strong: true,
+    })),
+    ...wrap(
+      [
+        p.employee.address,
+        `${p.employee.postal} ${p.employee.city}`.trim(),
+        ...(p.employee.avs
+          ? [`${tr("avsNumber", l)} : ${p.employee.avs}`]
+          : []),
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      font,
+      9,
+      205,
+    ).map((value) => ({ value, strong: false })),
+  ];
+  for (let i = 0; i < Math.max(employer.length, recipient.length); i++) {
+    ensure(18);
+    for (const [entry, x] of [
+      [employer[i], left],
+      [recipient[i], 336],
+    ] as const) {
+      if (entry)
+        text(
+          entry.value,
+          x,
+          y,
+          entry.strong ? 9.5 : 9,
+          ink,
+          entry.strong ? bold : font,
+        );
+    }
+    y -= 14;
+  }
+  y -= 26;
+  ensure(130);
+  const documentTitle = `${tr("payroll", l)} · ${period.charAt(0).toLocaleUpperCase(l)}${period.slice(1)}`;
+  paragraph(documentTitle, left, width, 14, ink, bold);
   if (draft) {
-    text(tr("draftPdf", l), 42, y, 10, rgb(0.64, 0.31, 0.12));
-    y -= 22;
+    y -= 4;
+    paragraph(tr("draftPdf", l), left, width, 8, muted, bold);
   }
+  y -= 14;
   if (p.company.demo) {
-    text(tr("demoNotice", l), 42, y, 8, muted);
-    y -= 20;
+    paragraph(tr("demoNotice", l), left, width, 7.5, muted);
+    y -= 8;
   }
-  const headings = () => {
-    ensure(35);
-    page.drawRectangle({
-      x: 42,
-      y: y - 9,
-      width: 511,
-      height: 27,
-      color: rgb(0.94, 0.96, 0.94),
-    });
-    text(tr("label", l), 51, y, 8);
-    right(tr("base", l), 380, y, 8);
-    right(tr("rateColumn", l), 453, y, 8);
-    right("CHF", 544, y, 8);
-    y -= 33;
+
+  const number = (value: string, digits: number) => {
+    // Format only: all payroll amounts and bases still come from the saved result.
+    const n = Number(value);
+    return Number.isFinite(n)
+      ? formatNumber(n, l, digits, Math.max(digits, 8))
+      : value;
   };
-  headings();
-  for (const row of p.result.lines.filter(
-    (r) => r.category === "earning" || r.amount !== 0,
-  )) {
-    const label = tr(row.label, l);
-    const wrapped = wrap(label, font, 9, 250);
-    const height = Math.max(27, wrapped.length * 13 + 12);
-    if (y - height < 75) {
+  const tableHeader = () => {
+    text(tr("payslipDescription", l), left, y, 8, ink, bold);
+    right(tr("base", l), 365, y, 8, muted);
+    right(tr("rateColumn", l), 424, y, 8, muted);
+    right(tr("payslipAmount", l), rightEdge, y, 8, ink, bold);
+    line(y - 7);
+    y -= 25;
+  };
+  const header = (title: string, continuation = false) => {
+    if (y - 95 < 70) {
       addPage();
-      y -= 28;
-      headings();
+      continuation = true;
     }
-    wrapped.forEach((v, i) => text(v, 51, y - i * 13, 9));
-    const basis = row.base
-      ? `${Number(row.quantity) !== 1 ? `${Number(row.quantity)} × ` : ""}${row.base}`
-      : "";
-    right(basis, 380, y, 8, muted);
-    const percentageRate =
-      row.category === "contribution" ||
-      ["holiday", "vacation"].includes(row.id) ||
-      p.input.elements.some(
-        (element) => element.id === row.id && element.kind === "overtime",
-      );
-    right(
-      row.rate ? `${row.rate}${percentageRate ? " %" : ""}` : "",
-      453,
-      y,
-      8,
-      muted,
-    );
-    right(
-      money(row.category === "contribution" ? -row.amount : row.amount, l),
-      544,
-      y,
-      10,
-    );
-    y -= height;
-    page.drawLine({
-      start: { x: 42, y: y + 10 },
-      end: { x: 553, y: y + 10 },
-      thickness: 0.4,
-      color: lineColor,
-    });
-  }
-  ensure(p.result.reimbursements ? 164 : 140);
-  y -= 12;
-  for (const [key, val] of [
-    ["gross", p.result.gross],
-    ["deductions", p.result.deductions],
-    ...(p.result.reimbursements
-      ? [["reimbursements", p.result.reimbursements] as const]
-      : []),
-  ] as const) {
-    text(tr(key, l), 330, y, 10);
-    right(money(val, l), 544, y, 11);
-    y -= 24;
-  }
-  y -= 12;
-  page.drawRectangle({
-    x: 320,
-    y: y - 13,
-    width: 233,
-    height: 37,
-    color: green,
-  });
-  text(tr("net", l), 330, y, 11, rgb(1, 1, 1));
-  right(money(p.result.net, l), 544, y, 14, rgb(1, 1, 1));
-  y -= 49;
-  if (p.employee.iban) paragraph(`IBAN : ${p.employee.iban}`, 42, 511, 9);
-  if (p.input.note) {
+    if (continuation) tableHeader();
+    text(title, left, y, 8, muted, bold);
+    y -= 20;
+  };
+  const amountAt = (amount: number, at: number, size = 9, face = font) => {
+    text("CHF", 445, at, 7, muted);
+    right(money(amount, l), rightEdge, at, size, ink, face);
+  };
+  const subtotal = (label: string, amount: number, avsBasis?: number) => {
+    ensure(avsBasis === undefined ? 35 : 52);
+    line(y + 5);
+    y -= 10;
+    text(label, left, y, 9, ink, bold);
+    amountAt(amount, y, 9, bold);
+    y -= 18;
+    if (avsBasis !== undefined) {
+      text(tr("payslipAvsBasis", l), left, y, 8, muted);
+      amountAt(avsBasis, y, 8);
+      y -= 16;
+    }
     y -= 12;
-    paragraph(p.input.note, 42, 511, 9);
+  };
+  ensure(130);
+  tableHeader();
+  const reimbursements = new Set(
+    p.input.elements.filter((e) => e.reimbursement).map((e) => e.id),
+  );
+  const rows = p.result.lines.filter(
+    (r) => r.category === "earning" || r.amount !== 0,
+  );
+  const groups = [
+    {
+      title: tr("payslipEarnings", l),
+      rows: rows.filter(
+        (r) => r.category === "earning" && !reimbursements.has(r.id),
+      ),
+      total: p.result.gross,
+      label: tr(
+        p.result.gross === p.result.avsBase ? "payslipGrossAvs" : "gross",
+        l,
+      ),
+      avsBasis:
+        p.result.gross !== p.result.avsBase ? p.result.avsBase : undefined,
+    },
+    {
+      title: tr("deductions", l),
+      rows: rows.filter((r) => r.category === "contribution"),
+      total: -p.result.deductions,
+      label: tr("payslipDeductionsTotal", l),
+    },
+    {
+      title: tr("reimbursements", l),
+      rows: rows.filter(
+        (r) => r.category === "earning" && reimbursements.has(r.id),
+      ),
+      total: p.result.reimbursements ?? 0,
+      label: tr("reimbursements", l),
+    },
+  ];
+  for (const [groupIndex, group] of groups.entries()) {
+    if (!group.rows.length) continue;
+    if (groupIndex > 0) header(group.title);
+    for (const [rowIndex, row] of group.rows.entries()) {
+      const overtime = p.input.elements.some(
+        (e) => e.id === row.id && e.kind === "overtime",
+      );
+      const percentage =
+        (row.category === "contribution" &&
+          p.rules.contributions.find((c) => c.id === row.id)?.kind !==
+            "fixed") ||
+        ["holiday", "vacation"].includes(row.id) ||
+        overtime;
+      const basis = row.base
+        ? `${Number(row.quantity) !== 1 ? `${number(row.quantity, 0)} × ` : ""}${number(row.base, 2)}`
+        : "";
+      const rate =
+        row.rate && row.id !== "hourlySalary"
+          ? `${overtime ? "+" : ""}${number(row.rate, percentage ? 0 : 2)}${percentage ? " %" : ""}`
+          : "";
+      const columns = [
+        wrap(tr(row.label, l), font, 9, 222),
+        wrap(basis, font, 8, 78),
+        wrap(rate, font, 8, 49),
+        wrap(
+          money(row.category === "contribution" ? -row.amount : row.amount, l),
+          font,
+          9,
+          73,
+        ),
+      ];
+      const count = Math.max(...columns.map((c) => c.length));
+      const height = Math.max(19, count * 13 + 6);
+      // Keep an ordinary row with its subtotal; very long labels can span pages.
+      const reserve =
+        rowIndex === group.rows.length - 1
+          ? group.avsBasis === undefined
+            ? 35
+            : 52
+          : 0;
+      if (y - Math.min(height + reserve, 580) < 70) {
+        addPage();
+        header(group.title, true);
+      }
+      for (let i = 0; i < count; i++) {
+        if (y - 24 < 70) {
+          addPage();
+          header(group.title, true);
+        }
+        if (columns[0]![i]) text(columns[0]![i]!, left, y, 9);
+        if (columns[1]![i]) right(columns[1]![i]!, 365, y, 8, muted);
+        if (columns[2]![i]) right(columns[2]![i]!, 424, y, 8, muted);
+        if (columns[3]![i]) {
+          if (i === 0) text("CHF", 445, y, 7, muted);
+          right(columns[3]![i]!, rightEdge, y, 9);
+        }
+        y -= 13;
+      }
+      y -= Math.max(6, height - count * 13);
+    }
+    subtotal(group.label, group.total, group.avsBasis);
+  }
+
+  ensure(p.employee.iban ? 96 : 60);
+  y -= 2;
+  page.drawLine({
+    start: { x: left, y: y + 11 },
+    end: { x: rightEdge, y: y + 11 },
+    thickness: 1,
+    color: ink,
+  });
+  text(tr("net", l), left, y - 11, 10.5, ink, bold);
+  amountAt(p.result.net, y - 11, 12, bold);
+  y -= 44;
+  if (p.employee.iban) {
+    paragraph(tr("payslipBankAccount", l), left, width, 8, muted);
+    paragraph(p.employee.iban, left, width, 9);
+    y -= 12;
+  }
+  if (p.input.note) {
+    ensure(45);
+    text(tr("payslipNote", l).toLocaleUpperCase(l), left, y, 7.5, muted, bold);
+    y -= 18;
+    paragraph(p.input.note, left, width, 9);
+    y -= 10;
   }
   if (p.company.footer) {
-    y -= 12;
-    paragraph(p.company.footer, 42, 511, 9);
+    const footerLines = wrap(p.company.footer, font, 8, width);
+    if (footerLines.length <= 2) {
+      if (y < 88) addPage();
+      footerLines.forEach((ln, i) => text(ln, left, 76 - i * 12, 8, muted));
+    } else paragraph(p.company.footer, left, width, 9, muted);
   }
   pages.forEach((pg, i) => {
     pg.drawLine({
-      start: { x: 42, y: 47 },
-      end: { x: 553, y: 47 },
+      start: { x: left, y: 48 },
+      end: { x: rightEdge, y: 48 },
       thickness: 0.5,
-      color: lineColor,
+      color: rule,
     });
     pg.drawText(
-      `${tr("revision", l)} ${revision} · ${p.period} · ${tr("page", l)} ${i + 1}/${pages.length}`,
-      { x: 42, y: 32, font, size: 8, color: muted },
+      `Easy Salaires · ${p.period} · ${tr("revision", l)} ${revision}`,
+      {
+        x: left,
+        y: 32,
+        size: 7.5,
+        font,
+        color: muted,
+      },
     );
-    pg.drawText("CHF", { x: 530, y: 32, font, size: 8, color: muted });
+    const pagination = `${tr("page", l)} ${i + 1} / ${pages.length}`;
+    pg.drawText(pagination, {
+      x: rightEdge - font.widthOfTextAtSize(pagination, 7.5),
+      y: 32,
+      size: 7.5,
+      font,
+      color: muted,
+    });
   });
   return pdf.save({ useObjectStreams: false });
 }

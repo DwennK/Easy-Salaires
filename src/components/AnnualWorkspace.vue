@@ -3,6 +3,7 @@ import { computed, ref, watch } from "vue";
 import {
   ArrowRight,
   FileText,
+  Eye,
   Plus,
   Pencil,
   ChevronLeft,
@@ -26,6 +27,7 @@ const emit = defineEmits<{
   addEmployee: [];
   detail: [string, string];
   pdf: [string, string];
+  preview: [string, string];
   cell: [string, string, "salary" | "hours", string, boolean];
   extras: [string, string, string, string];
   payment: [string, string, string, string | null];
@@ -362,14 +364,26 @@ watch(
                   }}
                 </td>
                 <td>
-                  <button
-                    class="icon-button pdf-action"
-                    :disabled="busy || row.p.result.errors.length > 0"
-                    :aria-label="`PDF ${months()[i]}`"
-                    @click="emit('pdf', employeeId, row.period)"
-                  >
-                    <FileText :size="17" />
-                  </button>
+                  <div class="payroll-pdf-actions">
+                    <button
+                      class="icon-button pdf-action"
+                      :disabled="busy || row.p.result.errors.length > 0"
+                      :aria-label="`${tr('viewPdf')} ${months()[i]}`"
+                      :title="tr('viewPdf')"
+                      @click="emit('preview', employeeId, row.period)"
+                    >
+                      <Eye :size="17" />
+                    </button>
+                    <button
+                      class="icon-button pdf-action"
+                      :disabled="busy || row.p.result.errors.length > 0"
+                      :aria-label="`PDF ${months()[i]}`"
+                      :title="tr('downloadPdf')"
+                      @click="emit('pdf', employeeId, row.period)"
+                    >
+                      <FileText :size="17" />
+                    </button>
+                  </div>
                 </td>
               </template>
               <td v-else colspan="7" class="unavailable-month">

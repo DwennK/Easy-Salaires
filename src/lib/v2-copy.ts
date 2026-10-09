@@ -4,6 +4,8 @@ export const v2Copy: Record<string, [string, string]> = {
     "Complétez les mois précédents pour calculer les cumuls.",
     "Complete earlier months to calculate cumulative amounts.",
   ],
+  viewPdf: ["Voir le PDF", "View PDF"],
+  downloadPdf: ["Télécharger le PDF", "Download PDF"],
   pdfOutdated: ["PDF à actualiser", "PDF needs updating"],
   salaries: ["Les salaires", "Payroll"],
   salariesSub: [
