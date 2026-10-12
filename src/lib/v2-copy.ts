@@ -1,5 +1,6 @@
 export const v2Copy: Record<string, [string, string]> = {
   savePdfAs: ["Enregistrer sous…", "Save as…"],
+  goToCorrection: ["Compléter ici", "Complete here"],
   calculationBlocked: ["Calcul bloqué", "Calculation blocked"],
   reimbursements: ["Remboursements de frais", "Expense reimbursements"],
   previousMonthsIncomplete: [

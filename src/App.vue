@@ -89,6 +89,10 @@ import {
   rulesReady,
   addressReady,
 } from "./lib/ux";
+import {
+  payrollCorrection,
+  type PayrollCorrection,
+} from "./lib/payroll-corrections";
 import AnnualWorkspace from "./components/AnnualWorkspace.vue";
 import AppUpdater from "./components/AppUpdater.vue";
 import ThemePicker from "./components/ThemePicker.vue";
@@ -118,6 +122,15 @@ const state = ref<State | null>(null),
   review = ref({ transport: false, meals: false, remarks: "" }),
   reviewChecked = ref(false);
 provide("appError", error);
+const employeeCorrection = ref<{
+  owner: Employee;
+  target: PayrollCorrection;
+}>();
+const payrollCorrectionTarget = ref<{
+  owner: Payroll;
+  target: PayrollCorrection;
+}>();
+const settingsCorrection = ref<{ field: string; period: string }>();
 const settingsTab = ref("company");
 const settingsView = ref<{ dirty: boolean }>();
 const pendingNavigation = ref<(() => void) | null>(null);
@@ -129,6 +142,7 @@ function requestNavigation(action: () => void) {
 }
 function navigate(target: string) {
   requestNavigation(() => {
+    settingsCorrection.value = undefined;
     page.value = target;
   });
 }
@@ -506,6 +520,72 @@ async function employeePayroll(id: string, selected: string) {
     payrollEdit.value = clone(p);
   });
 }
+async function correctPayroll(id: string, selected: string, errorKey: string) {
+  await run(async () => {
+    const s = clone(state.value!);
+    const employee = s.employees.find((e) => e.id === id)!;
+    let p: Payroll | undefined;
+    if (errorKey !== "yearNotVerified") {
+      // Forecast months are prepared only in this disposable copy.
+      for (let m = 1; m <= Number(selected.slice(5)); m++) {
+        const month = `${selected.slice(0, 4)}-${String(m).padStart(2, "0")}`;
+        if (activeIn(employee, month)) prepareMonth(s, month, id);
+      }
+      p = s.payrolls.find((p) => p.employeeId === id && p.period === selected);
+    }
+    let target = payrollCorrection(errorKey, p);
+    if (target.surface === "earlier") {
+      const first = s.payrolls
+        .filter(
+          (p) =>
+            p.employeeId === id &&
+            p.period.startsWith(selected.slice(0, 4)) &&
+            p.period < selected &&
+            activeIn(employee, p.period) &&
+            (p.result.errors.length || p.needsReview),
+        )
+        .sort((a, b) => a.period.localeCompare(b.period))[0];
+      if (!first) return;
+      p = first;
+      selected = first.period;
+      const cause = first.result.errors.find(
+        (e) => e !== "previousMonthsIncomplete",
+      );
+      target = cause
+        ? payrollCorrection(cause, first, true)
+        : { surface: "payroll", field: "" };
+    }
+    // A historical contract can differ from the employee form's latest version.
+    // In that case, correct the affected month instead of a different default.
+    if (
+      target.surface === "employee" &&
+      p &&
+      Object.hasOwn(p.terms, target.field)
+    ) {
+      const field = target.field as keyof Payroll["terms"];
+      if (
+        JSON.stringify(p.terms[field]) !==
+        JSON.stringify(employee.terms.at(-1)?.[field])
+      )
+        target = { ...target, surface: "payroll" };
+    }
+    requestNavigation(() => {
+      payrollEdit.value = null;
+      employeeEdit.value = null;
+      if (target.surface === "settings") {
+        settingsCorrection.value = { field: target.field, period: selected };
+        settingsTab.value = "rules";
+        page.value = "settings";
+      } else if (target.surface === "employee") {
+        employeeEdit.value = employee;
+        employeeCorrection.value = { owner: employeeEdit.value, target };
+      } else if (p) {
+        payrollEdit.value = clone(p);
+        payrollCorrectionTarget.value = { owner: payrollEdit.value, target };
+      }
+    });
+  });
+}
 async function annualCell(
   id: string,
   selected: string,
@@ -643,7 +723,12 @@ async function payrollSave(
 ) {
   await run(async () => {
     const s = clone(state.value!);
-    const saved = savePayroll(s, p);
+    const draft = clone(p);
+    if (!s.payrolls.some((saved) => saved.id === draft.id)) {
+      // Correction links may open a forecast without recording it yet.
+      draft.id = ensurePayroll(s, draft.employeeId, draft.period).id;
+    }
+    const saved = savePayroll(s, draft);
     if (payment) recordPayment(s, saved.id, payment.date, payment.amount);
     const complete =
       !saved.result.errors.length &&
@@ -1068,6 +1153,7 @@ onMounted(() =>
             @edit-employee="employeeEdit = $event"
             @add-employee="employeeEdit = employeeDefaults()"
             @detail="employeePayroll"
+            @correct="correctPayroll"
             @pdf="annualPdf"
             @preview="annualPreview"
             @cell="annualCell"
@@ -1742,6 +1828,7 @@ onMounted(() =>
         <SettingsView
           v-else-if="page === 'settings'"
           ref="settingsView"
+          :initial-correction="settingsCorrection"
           v-model:tab="settingsTab"
           :state="state"
           :busy="busy"
@@ -1814,6 +1901,11 @@ onMounted(() =>
   <EmployeeEditor
     v-if="employeeEdit && state"
     :employee="employeeEdit"
+    :initial-correction="
+      employeeCorrection?.owner === employeeEdit
+        ? employeeCorrection.target
+        : undefined
+    "
     :is-new="!state.employees.some((e) => e.id === employeeEdit!.id)"
     :has-payroll="state.payrolls.some((p) => p.employeeId === employeeEdit!.id)"
     :contributions="state.rules.at(-1)!.contributions"
@@ -1826,6 +1918,14 @@ onMounted(() =>
     v-if="payrollEdit && state"
     :key="payrollEdit.id + payrollEdit.updated"
     :payroll="payrollEdit"
+    :initial-correction="
+      payrollCorrectionTarget?.owner === payrollEdit
+        ? payrollCorrectionTarget.target
+        : undefined
+    "
+    @correct="
+      correctPayroll(payrollEdit!.employeeId, payrollEdit!.period, $event)
+    "
     :state="state"
     :busy="busy"
     @close="payrollEdit = null"

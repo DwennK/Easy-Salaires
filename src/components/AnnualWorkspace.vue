@@ -24,6 +24,7 @@ const year = defineModel<number>("year", { required: true });
 const employeeId = defineModel<string>("employeeId", { required: true });
 const emit = defineEmits<{
   editEmployee: [Employee];
+  correct: [string, string, string];
   addEmployee: [];
   detail: [string, string];
   pdf: [string, string];
@@ -89,7 +90,7 @@ const blockers = computed(() => {
     if (!row.active) continue;
     for (const error of new Set(row.p?.result.errors ?? ["yearNotVerified"])) {
       const affected = grouped.get(error) ?? [];
-      affected.push(months()[Number(row.period.slice(5)) - 1]!);
+      affected.push(row.period);
       grouped.set(error, affected);
     }
   }
@@ -233,7 +234,32 @@ watch(
         <ul>
           <li v-for="blocker in blockers" :key="blocker.error">
             {{ tr(blocker.error) }}
-            <span class="blocker-months">{{ blocker.affected.join(", ") }}</span>
+            <button
+              type="button"
+              class="text-button blocker-action"
+              :disabled="busy"
+              @click="
+                emit('correct', employeeId, blocker.affected[0]!, blocker.error)
+              "
+            >
+              {{ tr("goToCorrection") }} →
+            </button>
+            <span class="blocker-months"
+              ><template
+                v-for="(period, index) in blocker.affected"
+                :key="period"
+                >{{ index ? ", " : ""
+                }}<button
+                  type="button"
+                  class="text-button blocker-month"
+                  :disabled="busy"
+                  :aria-label="`${tr('goToCorrection')} · ${months()[Number(period.slice(5)) - 1]} ${year} · ${tr(blocker.error)}`"
+                  @click="emit('correct', employeeId, period, blocker.error)"
+                >
+                  {{ months()[Number(period.slice(5)) - 1] }}
+                </button></template
+              ></span
+            >
           </li>
         </ul>
         <p>{{ tr("incompleteTotals") }}</p>

@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import type { Employee, Contribution } from "../domain/types";
 import { clone, periodNow } from "../domain/defaults";
 import { tr } from "../lib/i18n";
 import { termsDiff, validateEmployee } from "../domain/service";
 import { d, decimalText } from "../domain/money";
 import { addressReady, validAmount } from "../lib/ux";
+import {
+  focusCorrection,
+  type PayrollCorrection,
+} from "../lib/payroll-corrections";
 import Modal from "./Modal.vue";
 import Field from "./Field.vue";
 import TermsForm from "./TermsForm.vue";
 import Tabs from "./Tabs.vue";
 const props = defineProps<{
   employee: Employee;
+  initialCorrection?: PayrollCorrection;
   hasPayroll: boolean;
   isNew?: boolean;
   contributions: Contribution[];
@@ -28,7 +33,14 @@ const draft = ref(clone(props.employee)),
 const term = ref(clone(draft.value.terms[draft.value.terms.length - 1]!));
 term.value.workDays ??= "5";
 const initial = JSON.stringify({ draft: draft.value, term: term.value });
-const tab = ref("identity");
+const tab = ref(props.initialCorrection?.tab ?? "identity");
+onMounted(async () => {
+  await nextTick();
+  focusCorrection(
+    document.getElementById("employee-form"),
+    props.initialCorrection?.field ?? "",
+  );
+});
 const tabs = [
   { id: "identity", label: "identityShort" },
   { id: "contract", label: "contractShort" },
@@ -169,6 +181,7 @@ async function submit() {
               :label="tr('city')"
             />
             <Field
+              data-correction="birthDate"
               v-model="draft.birthDate"
               type="date"
               :label="tr('birthDate')"
@@ -197,6 +210,7 @@ async function submit() {
           <p class="hint">{{ tr("contractHelp") }}</p>
           <div class="form-grid">
             <Field
+              data-correction="start"
               v-model="draft.start"
               type="date"
               :label="tr('start')"

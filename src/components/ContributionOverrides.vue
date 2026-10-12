@@ -31,6 +31,7 @@ function set(id: string, key: "employee" | "employer", value: string | null) {
       </summary>
       <div class="form-grid">
         <Field
+          :data-correction="`contribution:${c.id}:employee`"
           :model-value="model.find((o) => o.id === c.id)?.employee ?? ''"
           @update:model-value="set(c.id, 'employee', $event)"
           :label="`${tr('employeePays')} (${c.kind === 'percent' ? '%' : 'CHF'})`"
@@ -39,6 +40,7 @@ function set(id: string, key: "employee" | "employer", value: string | null) {
           inputmode="decimal"
         />
         <Field
+          :data-correction="`contribution:${c.id}:employer`"
           :model-value="model.find((o) => o.id === c.id)?.employer ?? ''"
           @update:model-value="set(c.id, 'employer', $event)"
           :label="`${tr('employerPays')} (${c.kind === 'percent' ? '%' : 'CHF'})`"

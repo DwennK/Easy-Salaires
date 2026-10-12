@@ -1172,3 +1172,24 @@ select:focus-visible {
     margin-top: 20px;
   }
 }
+
+/* Direct correction links retain the compact blocker summary. */
+.blocker-action {
+  margin-left: 8px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.blocker-month {
+  min-height: 24px;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+[data-correction]:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}

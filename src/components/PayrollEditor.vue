@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import {
   Plus,
   Trash2,
@@ -13,12 +13,22 @@ import { applicable, calculate } from "../domain/payroll";
 import { missingEarlier } from "../domain/service";
 import { d, francs, money as formatMoney, decimalText } from "../domain/money";
 import { tr, periodLabel, lang } from "../lib/i18n";
+import {
+  focusCorrection,
+  payrollCorrection,
+  type PayrollCorrection,
+} from "../lib/payroll-corrections";
 import Modal from "./Modal.vue";
 import Field from "./Field.vue";
 import { addressReady } from "../lib/ux";
 import TermsForm from "./TermsForm.vue";
 const money = (value: number) => formatMoney(value, lang.value);
-const props = defineProps<{ payroll: Payroll; state: State; busy: boolean }>();
+const props = defineProps<{
+  payroll: Payroll;
+  state: State;
+  busy: boolean;
+  initialCorrection?: PayrollCorrection;
+}>();
 const emit = defineEmits<{
   save: [Payroll, { date: string; amount: string | null } | undefined];
   preview: [Payroll];
@@ -27,6 +37,7 @@ const emit = defineEmits<{
   settings: [string];
   employee: [];
   earlier: [string];
+  correct: [string];
 }>();
 const draft = ref(clone(props.payroll)),
   adding = ref(false),
@@ -76,7 +87,8 @@ function requestLeave(target = "close") {
   } else leave(target);
 }
 function leave(target: string) {
-  if (target === "settings") emit("settings", "rules");
+  if (target.startsWith("correct:")) emit("correct", target.slice(8));
+  else if (target === "settings") emit("settings", "rules");
   else if (target === "company") emit("settings", "company");
   else if (target === "employee") emit("employee");
   else if (target === "close") emit("close");
@@ -89,6 +101,16 @@ const addressesMissing = computed(
     !addressReady(draft.value.employee),
 );
 const conditionsOpen = ref(false);
+async function reveal(field: string) {
+  await nextTick();
+  focusCorrection(document.querySelector("dialog[open]"), field);
+}
+function correct(error: string) {
+  const target = payrollCorrection(error, draft.value, true);
+  if (target.surface === "payroll") void reveal(target.field);
+  else requestLeave(`correct:${error}`);
+}
+onMounted(() => reveal(props.initialCorrection?.field ?? ""));
 const result = computed(() =>
   calculate(
     draft.value.employee,
@@ -221,7 +243,17 @@ function payload() {
       <div class="notice error" v-if="result.errors.length">
         <strong>{{ tr("helpMissing") }}</strong>
         <ul>
-          <li v-for="err in result.errors" :key="err">{{ tr(err) }}</li>
+          <li v-for="err in result.errors" :key="err">
+            {{ tr(err) }}
+            <button
+              type="button"
+              class="text-button blocker-action"
+              :disabled="busy"
+              @click="correct(err)"
+            >
+              {{ tr("goToCorrection") }} →
+            </button>
+          </li>
         </ul>
       </div>
       <div class="notice" v-if="earlier.length">
@@ -253,40 +285,12 @@ function payload() {
           </button></template
         >
       </div>
-      <p
-        v-if="
-          result.errors.some(
-            (e) => e.startsWith('missing:') || e === 'yearNotVerified',
-          )
-        "
-        class="hint"
-      >
-        <button class="text-button" @click="requestLeave('settings')">
-          {{ tr("resolveSettings") }}
-        </button>
-      </p>
-      <p
-        v-if="
-          result.errors.some((e) =>
-            [
-              'lppEmployeeRequired',
-              'lppEmployerRequired',
-              'salaryRequired',
-              'referenceAgeReview',
-              'exemptionReasonRequired',
-            ].includes(e),
-          )
-        "
-      >
-        <button class="text-button" @click="conditionsOpen = true">
-          {{ tr("completeConditions") }}
-        </button>
-      </p>
       <p class="notice" v-for="warning in result.warnings" :key="warning">
         {{ tr(warning) }}
       </p>
       <Field
         v-if="draft.terms.mode === 'hourly'"
+        data-correction="hours"
         v-model="draft.input.hours"
         :label="tr('hours')"
         :hint="tr('hoursHelp')"
@@ -300,12 +304,13 @@ function payload() {
       />
       <Field
         v-else
+        data-correction="salary"
         v-model="draft.terms.salary"
         :label="tr('monthSalaryEdit')"
         :hint="tr('monthSalaryEditHelp')"
         inputmode="decimal"
       />
-      <details class="form-section payroll-extras">
+      <details data-correction="extras" class="form-section payroll-extras">
         <summary>{{ tr("payrollExtras") }}</summary>
         <div v-for="el in draft.input.elements" :key="el.id" class="element">
           <header>
@@ -322,9 +327,14 @@ function payload() {
               <Trash2 :size="16" />
             </button>
           </header>
-          <Field v-model="el.label" :label="tr('label')" />
+          <Field
+            :data-correction="`element:${el.id}:label`"
+            v-model="el.label"
+            :label="tr('label')"
+          />
           <div class="form-grid" v-if="el.kind !== 'adjustment'">
             <Field
+              :data-correction="`element:${el.id}:quantity`"
               v-model="el.quantity"
               :label="tr('quantity')"
               inputmode="decimal"
@@ -340,10 +350,12 @@ function payload() {
           </div>
           <div class="form-grid" v-if="el.kind === 'overtime'">
             <Field
+              :data-correction="`element:${el.id}:rate`"
               v-model="el.rate"
               :label="tr('rate')"
               inputmode="decimal"
             /><Field
+              :data-correction="`element:${el.id}:premium`"
               v-model="el.premium"
               :label="tr('premium')"
               inputmode="decimal"
@@ -356,6 +368,7 @@ function payload() {
               }}</label
             ><template v-if="!el.paid"
               ><Field
+                :data-correction="`element:${el.id}:amount`"
                 v-model="el.amount"
                 :label="tr('deductAmount')"
                 inputmode="decimal"
@@ -366,6 +379,7 @@ function payload() {
             ></template
           ><template v-if="el.kind === 'adjustment'"
             ><Field
+              :data-correction="`element:${el.id}:amount`"
               v-model="el.amount"
               :label="tr('amount')"
               inputmode="decimal"
@@ -446,11 +460,13 @@ function payload() {
         <p class="hint">{{ tr("prorataHelp") }}</p>
         <template v-if="draft.terms.mode === 'monthly'"
           ><Field
+            data-correction="prorata"
             v-model="draft.input.prorata"
             :label="tr('overrideRatio')"
             inputmode="decimal"
           /><Field
             v-if="draft.input.prorata !== null"
+            data-correction="prorataReason"
             v-model="draft.input.prorataReason"
             :label="tr('reason')"
           /><button class="text-button" @click="draft.input.prorata = null">

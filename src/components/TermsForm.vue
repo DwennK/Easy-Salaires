@@ -22,7 +22,7 @@ const salaryValid = computed(() => validAmount(model.value.salary));
     <div class="form-grid">
       <label class="field"
         ><span>{{ tr("mode") }}</span
-        ><select v-model="model.mode">
+        ><select data-correction="mode" v-model="model.mode">
           <option value="monthly">{{ tr("monthlyMode") }}</option>
           <option value="hourly">{{ tr("hourly") }}</option>
         </select></label
@@ -35,6 +35,7 @@ const salaryValid = computed(() => validAmount(model.value.salary));
       />
       <Field
         class="span-2"
+        data-correction="salary"
         v-model="model.salary"
         :label="tr(model.mode === 'monthly' ? 'salary' : 'rate')"
         inputmode="decimal"
@@ -54,10 +55,12 @@ const salaryValid = computed(() => validAmount(model.value.salary));
     </p>
     <div class="form-grid">
       <Field
+        data-correction="weeklyHours"
         v-model="model.weeklyHours"
         :label="tr('weeklyHours')"
         inputmode="decimal"
       /><Field
+        data-correction="workDays"
         v-model="model.workDays"
         :label="tr('workDays')"
         inputmode="decimal"
@@ -95,6 +98,7 @@ const salaryValid = computed(() => validAmount(model.value.salary));
       ><Field
         class="inset"
         v-if="model.family"
+        data-correction="familyAmount"
         v-model="model.familyAmount"
         :label="tr('familyAmount')"
         inputmode="decimal"
@@ -107,6 +111,7 @@ const salaryValid = computed(() => validAmount(model.value.salary));
         >
         <div v-if="model.holiday" class="form-grid inset">
           <Field
+            data-correction="holidayRate"
             v-model="model.holidayRate"
             :label="tr('holidayRate')"
             inputmode="decimal"
@@ -125,6 +130,7 @@ const salaryValid = computed(() => validAmount(model.value.salary));
         >
         <div v-if="model.vacation" class="form-grid inset">
           <Field
+            data-correction="vacationRate"
             v-model="model.vacationRate"
             :label="tr('vacationRate')"
             inputmode="decimal"
@@ -153,12 +159,14 @@ const salaryValid = computed(() => validAmount(model.value.salary));
     >
     <div class="form-grid" v-if="model.lpp">
       <Field
+        data-correction="lppEmployee"
         v-model="model.lppEmployee"
         :label="tr('lppEmployee')"
         inputmode="decimal"
         :placeholder="tr('required')"
         :hint="isMissing(model.lppEmployee) ? tr('required') : undefined"
       /><Field
+        data-correction="lppEmployer"
         v-model="model.lppEmployer"
         :label="tr('lppEmployer')"
         inputmode="decimal"
@@ -181,7 +189,11 @@ const salaryValid = computed(() => validAmount(model.value.salary));
           </option>
         </select></label
       >
-      <Field v-model="model.exemptionReason" :label="tr('exemptionReason')" />
+      <Field
+        data-correction="exemptionReason"
+        v-model="model.exemptionReason"
+        :label="tr('exemptionReason')"
+      />
       <details class="form-section">
         <summary>{{ tr("overrides") }}</summary>
         <p class="hint">{{ tr("overrideHelpV2") }}</p>

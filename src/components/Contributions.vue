@@ -51,6 +51,7 @@ const insurance = (c: Contribution) => ["aap", "aanp", "ijm"].includes(c.id);
       <template v-if="c.active">
         <div class="form-grid contribution-rates">
           <Field
+            :data-correction="`contribution:${c.id}:employee`"
             v-model="c.employee"
             @update:model-value="markCustom(c)"
             :label="`${tr('employeePays')} (${c.kind === 'percent' ? '%' : 'CHF'})`"
@@ -65,6 +66,7 @@ const insurance = (c: Contribution) => ["aap", "aanp", "ijm"].includes(c.id);
             "
           />
           <Field
+            :data-correction="`contribution:${c.id}:employer`"
             v-model="c.employer"
             @update:model-value="markCustom(c)"
             :label="`${tr('employerPays')} (${c.kind === 'percent' ? '%' : 'CHF'})`"

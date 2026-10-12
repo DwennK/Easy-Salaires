@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { PDFDocument } from "pdf-lib";
 import type { Company, Rules, State } from "../domain/types";
+import { applicable } from "../domain/payroll";
 import { clone, uid } from "../domain/defaults";
 import { tr } from "../lib/i18n";
+import { focusCorrection } from "../lib/payroll-corrections";
 import Field from "./Field.vue";
 import Contributions from "./Contributions.vue";
 import Tabs from "./Tabs.vue";
@@ -13,7 +15,11 @@ import {
   missingRates,
   validAmount,
 } from "../lib/ux";
-const props = defineProps<{ state: State; busy: boolean }>();
+const props = defineProps<{
+  state: State;
+  busy: boolean;
+  initialCorrection?: { field: string; period: string };
+}>();
 const tab = defineModel<string>("tab", { default: "company" });
 function newYear(year: number) {
   rules.value = {
@@ -81,9 +87,14 @@ function setSource(key: "url" | "verified", value: string | null) {
   rules.value.sources[0] ??= { url: "", year: rules.value.year, verified: "" };
   rules.value.sources[0][key] = value ?? "";
 }
-function selectYear(year: number) {
-  if (rulesDirty.value || props.busy) return;
-  const existing = props.state.rules.filter((r) => r.year === year).at(-1);
+function selectYear(year: number, initializing = false) {
+  if (rulesDirty.value || (props.busy && !initializing)) return;
+  const versions = props.state.rules.filter((r) => r.year === year);
+  const existing =
+    initializing && props.initialCorrection
+      ? (applicable(versions, props.initialCorrection.period) ??
+        versions.at(-1))
+      : versions.at(-1);
   if (!existing) {
     newYear(year);
     error.value = "";
@@ -93,6 +104,15 @@ function selectYear(year: number) {
   savedRules.value = JSON.stringify(existing);
   error.value = "";
 }
+onMounted(async () => {
+  if (!props.initialCorrection) return;
+  selectYear(Number(props.initialCorrection.period.slice(0, 4)), true);
+  await nextTick();
+  focusCorrection(
+    document.querySelector(".settings-layout"),
+    props.initialCorrection.field,
+  );
+});
 function resetRules() {
   rules.value = JSON.parse(savedRules.value);
   error.value = "";
@@ -373,7 +393,11 @@ function saveRules() {
           <p class="hint">{{ tr("presetHelp") }}</p>
           <Contributions v-model="rules.contributions" group="preset" />
         </section>
-        <details class="form-section" :open="rules.year !== 2026">
+        <details
+          data-correction="yearVerification"
+          class="form-section"
+          :open="rules.year !== 2026"
+        >
           <summary>{{ tr("yearAdvanced") }}</summary>
           <div class="form-grid">
             <Field
