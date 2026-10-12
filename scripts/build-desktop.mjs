@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { cleanReleaseStorage } from "./release-storage.mjs";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const require = createRequire(import.meta.url);
@@ -77,6 +78,7 @@ export async function buildDesktop({
     const destination = join(output, key);
     await rm(destination, { recursive: true, force: true });
     await rename(staging, destination);
+    cleanReleaseStorage(project);
     return destination;
   } finally {
     try {

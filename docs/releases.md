@@ -58,6 +58,8 @@ Standard GitHub-hosted runners are free for public repositories, including macOS
 
 ## Local build storage
 
+After a successful local build, generated release assets in `output/release/` are removed as well. The release script also removes previous versions after a successful upload, publication or verification, retaining the version it just processed. Cleanup is restricted to Easy Salaires installers, updater archives, their signatures and the updater manifest; notes, unrelated files and subdirectories are preserved. Failed operations do not trigger this cleanup.
+
 Prefer the GitHub tag workflow for releases: compilation runs on disposable runners. For a local installer, use `pnpm build:desktop`; only the latest packages per supported platform remain in `output/builds/`, and temporary Rust compilation files are removed after success, failure or a handled interruption. The command does not touch company data, signing keys or development caches. An OS crash or force-kill can leave a temporary `easy-salaires-build-*` directory and a platform lock in `output/builds/`; inspect these before removing them or retrying.
 
 Advanced `pnpm tauri build` and direct Cargo commands still retain normal caches in `src-tauri/target/`. Once native apps and compilation processes have stopped, `cargo clean --manifest-path src-tauri/Cargo.toml` removes that project cache (including any bundles it contains). Keep needed installers first and check that `CARGO_TARGET_DIR` does not redirect to a shared cache. Avoid keeping duplicate downloaded release packages after QA; retain lightweight reports and screenshots.

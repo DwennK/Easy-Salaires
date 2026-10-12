@@ -8,6 +8,7 @@ import {
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { verifyArtifact as verifySignature } from "./release-signature.mjs";
+import { cleanReleaseStorage } from "./release-storage.mjs";
 const verifyArtifact = (file, signature) =>
   verifySignature(file, signature, config.plugins.updater.pubkey, version);
 
@@ -105,6 +106,7 @@ if (mode === "validate") {
   });
   verifyArtifact(assets[mac ? 1 : 0], assets[mac ? 2 : 1]);
   gh("release", "upload", tag, ...assets, "--clobber");
+  cleanReleaseStorage(process.cwd(), { keepVersion: version });
 } else if (mode === "publish" || mode === "verify") {
   const dir = "output/release";
   mkdirSync(dir, { recursive: true });
@@ -156,6 +158,7 @@ if (mode === "validate") {
     )
       fail("Published updater manifest differs from verified artifacts");
   }
+  cleanReleaseStorage(process.cwd(), { keepVersion: version });
   console.log(`Verified both signed targets for ${tag}.`);
 } else
   fail(
