@@ -110,6 +110,7 @@ const state = ref<State | null>(null),
   employeeFilter = ref(""),
   showArchived = ref(false),
   previewUrl = ref(""),
+  previewDocument = ref<{ name: string; data: string } | null>(null),
   createOpen = ref(false),
   companyName = ref(""),
   certificateEmployee = ref<Employee | null>(null),
@@ -621,8 +622,7 @@ async function annualPdf(id: string, selected: string) {
       revision = issueRevision(s, p, toBase64(bytes));
       await commit(s);
     }
-    if (await exportFile(payslipName(p, revision!.number), revision!.pdf))
-      notify("exported");
+    if (await exportFile(payslipName(p), revision!.pdf)) notify("exported");
   });
 }
 async function archive(e: Employee) {
@@ -670,6 +670,7 @@ async function payrollSave(
 function closePreview() {
   URL.revokeObjectURL(previewUrl.value);
   previewUrl.value = "";
+  previewDocument.value = null;
 }
 async function preview(p: Payroll) {
   await run(() => showPreview(p));
@@ -689,10 +690,26 @@ async function showPreview(p: Payroll) {
           true,
           new Date().toISOString(),
         );
-  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
-  previewUrl.value = URL.createObjectURL(
+  const name = payslipName(p);
+  const url = URL.createObjectURL(
     new Blob([bytes as BlobPart], { type: "application/pdf" }),
   );
+  try {
+    if (native) await command("previewDownload", { url, name });
+  } catch (error) {
+    URL.revokeObjectURL(url);
+    throw error;
+  }
+  previewDocument.value = { name, data: toBase64(bytes) };
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
+  previewUrl.value = url;
+}
+async function savePreview() {
+  const document = previewDocument.value;
+  if (!document) return;
+  await run(async () => {
+    if (await exportFile(document.name, document.data)) notify("exported");
+  });
 }
 async function original(r: Revision, print: boolean) {
   await run(async () => {
@@ -718,7 +735,7 @@ async function exportMonth(individual = false) {
         await command(
           "exportBatch",
           revisions.map((r) => ({
-            name: payslipName(r.snapshot, r.number),
+            name: payslipName(r.snapshot),
             data: r.pdf,
           })),
         )
@@ -726,7 +743,7 @@ async function exportMonth(individual = false) {
         notify("exported");
     } else {
       const bytes = await mergePdfs(revisions.map((r) => r.pdf));
-      if (await exportFile(`${period.value}_salaires.pdf`, toBase64(bytes)))
+      if (await exportFile(`${period.value}_Salaires.pdf`, toBase64(bytes)))
         notify("exported");
     }
   });
@@ -1840,8 +1857,16 @@ onMounted(() =>
       class="pdf-preview"
       :src="previewUrl"
       :title="tr('preview')"
-    ></iframe
-  ></Modal>
+    ></iframe>
+    <template #footer>
+      <button class="button secondary" :disabled="busy" @click="closePreview">
+        {{ tr("close") }}
+      </button>
+      <button class="button primary" :disabled="busy" @click="savePreview">
+        <Download :size="17" />{{ tr("savePdfAs") }}
+      </button>
+    </template>
+  </Modal>
   <Modal
     v-if="companyMenuOpen"
     :title="state?.company.name || tr('company')"

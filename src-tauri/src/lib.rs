@@ -3,10 +3,11 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use serde_json::{json, Value};
 use std::{fs, io::Write, path::PathBuf, sync::Mutex};
 use storage::{Database, Result};
-use tauri::Manager;
+use tauri::{webview::DownloadEvent, Manager};
 struct AppState {
     db: Mutex<Option<Database>>,
     config: PathBuf,
+    preview_download: Mutex<Option<(String, String)>>,
 }
 fn read_config(s: &AppState) -> Value {
     fs::read(&s.config)
@@ -53,18 +54,21 @@ fn safe_name(name: &str) -> String {
         n
     }
 }
+fn numbered_path(path: &std::path::Path, number: usize) -> PathBuf {
+    if number == 0 {
+        path.to_owned()
+    } else {
+        path.with_file_name(format!(
+            "{}-{}.{}",
+            path.file_stem().unwrap_or_default().to_string_lossy(),
+            number,
+            path.extension().unwrap_or_default().to_string_lossy()
+        ))
+    }
+}
 fn unique_file(path: PathBuf, bytes: &[u8]) -> Result<PathBuf> {
     for i in 0..10000 {
-        let p = if i == 0 {
-            path.clone()
-        } else {
-            path.with_file_name(format!(
-                "{}-{}.{}",
-                path.file_stem().unwrap().to_string_lossy(),
-                i,
-                path.extension().unwrap_or_default().to_string_lossy()
-            ))
-        };
+        let p = numbered_path(&path, i);
         match fs::OpenOptions::new().write(true).create_new(true).open(&p) {
             Ok(mut f) => {
                 f.write_all(bytes).map_err(|e| e.to_string())?;
@@ -231,6 +235,17 @@ async fn native(
             *guard = Some(restored);
             Ok(json!({"state":data,"path":dest}))
         }
+        "previewDownload" => {
+            let url = payload["url"].as_str().ok_or("invalidFile")?;
+            let name = safe_name(payload["name"].as_str().ok_or("invalidFile")?);
+            if !url.starts_with("blob:") || !name.ends_with(".pdf") {
+                return Err("invalidFile".into());
+            }
+            // Transient UI metadata only; no salary data or file is written.
+            *state.preview_download.lock().map_err(|e| e.to_string())? =
+                Some((url.to_owned(), name));
+            Ok(Value::Null)
+        }
         "export" => {
             let name = safe_name(payload["name"].as_str().ok_or("invalidFile")?);
             let bytes = STANDARD
@@ -303,7 +318,55 @@ pub fn run() {
             app.manage(AppState {
                 db: Mutex::new(None),
                 config: dir.join("preferences.json"),
+                preview_download: Mutex::new(None),
             });
+            // Build the configured window here so downloads from the embedded
+            // PDF viewer also ask for a destination instead of using Downloads.
+            let config = app
+                .config()
+                .app
+                .windows
+                .first()
+                .ok_or("missing main window")?;
+            tauri::WebviewWindowBuilder::from_config(app, config)?
+                .on_download(|webview, event| {
+                    if let DownloadEvent::Requested { url, destination } = event {
+                        let preview_name = webview
+                            .state::<AppState>()
+                            .preview_download
+                            .lock()
+                            .ok()
+                            .and_then(|preview| {
+                                preview
+                                    .as_ref()
+                                    .filter(|(preview_url, _)| preview_url == url.as_str())
+                                    .map(|(_, name)| name.clone())
+                            });
+                        let name = preview_name.unwrap_or_else(|| {
+                            destination
+                                .file_name()
+                                .unwrap_or_default()
+                                .to_string_lossy()
+                                .into_owned()
+                        });
+                        let Some(selected) = rfd::FileDialog::new()
+                            .set_file_name(name)
+                            .save_file()
+                        else {
+                            return false;
+                        };
+                        // Match the regular export's non-overwriting behavior.
+                        let Some(path) = (0..10000)
+                            .map(|i| numbered_path(&selected, i))
+                            .find(|p| !p.exists())
+                        else {
+                            return false;
+                        };
+                        *destination = path;
+                    }
+                    true
+                })
+                .build()?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![native])

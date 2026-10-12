@@ -434,8 +434,8 @@ export async function payslipPdf(
   });
   return pdf.save({ useObjectStreams: false });
 }
-export const payslipName = (p: Payroll, revision: number) =>
-  `${p.period}_${safeName(`${p.employee.lastName}_${p.employee.firstName}`)}_r${revision}.pdf`;
+export const payslipName = (p: Payroll, revision?: number) =>
+  `${p.period}_Salaire_${safeName(`${p.employee.lastName}_${p.employee.firstName}`)}${revision === undefined ? "" : `_r${revision}`}.pdf`;
 export async function mergePdfs(data: string[]): Promise<Uint8Array> {
   const merged = await PDFDocument.create();
   for (const b of data) {

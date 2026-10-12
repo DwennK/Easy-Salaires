@@ -1,4 +1,5 @@
 export const v2Copy: Record<string, [string, string]> = {
+  savePdfAs: ["Enregistrer sous…", "Save as…"],
   reimbursements: ["Remboursements de frais", "Expense reimbursements"],
   previousMonthsIncomplete: [
     "Complétez les mois précédents pour calculer les cumuls.",

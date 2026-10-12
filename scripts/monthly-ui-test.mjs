@@ -93,7 +93,7 @@ try {
     .locator(".month-focus")
     .getByRole("button", { name: "Télécharger les fiches PDF", exact: true })
     .click();
-  assert.equal((await download).suggestedFilename(), "2026-09_salaires.pdf");
+  assert.equal((await download).suggestedFilename(), "2026-09_Salaires.pdf");
   await month.getByRole("button", { name: "Exporter", exact: true }).click();
   const csv = page.waitForEvent("download");
   await month
