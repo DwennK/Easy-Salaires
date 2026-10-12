@@ -83,6 +83,18 @@ const saved = computed(() =>
     .filter((r) => r.stored && r.p && !r.p.result.errors.length)
     .map((r) => r.p!),
 );
+const blockers = computed(() => {
+  const grouped = new Map<string, string[]>();
+  for (const row of rows.value) {
+    if (!row.active) continue;
+    for (const error of new Set(row.p?.result.errors ?? ["yearNotVerified"])) {
+      const affected = grouped.get(error) ?? [];
+      affected.push(months()[Number(row.period.slice(5)) - 1]!);
+      grouped.set(error, affected);
+    }
+  }
+  return [...grouped].map(([error, affected]) => ({ error, affected }));
+});
 const totals = computed(() => ({
   net: sum(saved.value.map((p) => p.result.net)),
   gross: sum(saved.value.map((p) => p.result.gross)),
@@ -129,7 +141,7 @@ function rowStatus(row: (typeof rows.value)[number]) {
     : !row.p
       ? "yearNotVerified"
       : row.p.result.errors.length
-        ? "incomplete"
+        ? "calculationBlocked"
         : !row.stored
           ? "forecast"
           : row.p.issued
@@ -211,6 +223,21 @@ watch(
           ><strong>{{ fmt(totals.paid) }} <small>CHF</small></strong>
         </div>
       </div>
+      <section
+        v-if="blockers.length"
+        id="payroll-blockers"
+        class="year-blockers"
+        :aria-label="tr('calculationBlocked')"
+      >
+        <strong>{{ tr("calculationBlocked") }}</strong>
+        <ul>
+          <li v-for="blocker in blockers" :key="blocker.error">
+            {{ tr(blocker.error) }}
+            <span class="blocker-months">{{ blocker.affected.join(", ") }}</span>
+          </li>
+        </ul>
+        <p>{{ tr("incompleteTotals") }}</p>
+      </section>
       <div class="year-table-caption">
         <span>{{ tr("annualEditingHelp") }}</span
         ><span class="table-legend"><i></i>{{ tr("editableCells") }}</span>
@@ -245,6 +272,11 @@ watch(
                 <button
                   class="month-link"
                   :disabled="!row.active || busy"
+                  :aria-describedby="
+                    row.active && row.p?.result.errors.length
+                      ? 'payroll-blockers'
+                      : undefined
+                  "
                   @click="emit('detail', employeeId, row.period)"
                 >
                   <span>{{ String(i + 1).padStart(2, "0") }}</span

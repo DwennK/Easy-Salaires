@@ -160,6 +160,27 @@ export function refreshPayrolls(s: State, employeeId = "", year?: number) {
     }
   }
 }
+/** Refresh cached results affected by the former inclusion of out-of-contract months. */
+export function refreshOutsideContractHistory(s: State) {
+  for (const employee of s.employees) {
+    const payrolls = s.payrolls.filter((p) => p.employeeId === employee.id);
+    const years = new Set(
+      payrolls
+        .filter(
+          (p) =>
+            activeIn(employee, p.period) &&
+            payrolls.some(
+              (old) =>
+                old.period.slice(0, 4) === p.period.slice(0, 4) &&
+                old.period < p.period &&
+                !activeIn(employee, old.period),
+            ),
+        )
+        .map((p) => Number(p.period.slice(0, 4))),
+    );
+    for (const year of years) refreshPayrolls(s, employee.id, year);
+  }
+}
 /** Additive upgrade: original PDF revisions and their snapshots are never changed. */
 function narrowOverrides(terms: Terms, rules: Rules | undefined): Terms {
   const next = clone(terms);

@@ -548,6 +548,34 @@ select:focus-visible {
   font-size: 12px;
   font-weight: 600;
 }
+.year-blockers {
+  margin: 16px 0;
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-left: 3px solid #a25224;
+  border-radius: 10px;
+  background: var(--paper);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.year-blockers > strong {
+  color: #a25224;
+}
+.year-blockers ul {
+  margin: 8px 0;
+  padding-left: 18px;
+}
+.year-blockers li + li {
+  margin-top: 6px;
+}
+.blocker-months {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+}
+.year-blockers p {
+  margin: 8px 0 0;
+}
 .month-link > span {
   font-size: 9px;
   color: var(--muted);

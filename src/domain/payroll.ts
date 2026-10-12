@@ -73,7 +73,8 @@ export function calculate(
       (p) =>
         p.employeeId === employee.id &&
         p.period.startsWith(String(year)) &&
-        p.period < period,
+        p.period < period &&
+        activeIn(employee, p.period),
     )
     .sort((a, b) => a.period.localeCompare(b.period));
   if (earlier.some((p) => p.result.errors.length > 0 || p.needsReview))

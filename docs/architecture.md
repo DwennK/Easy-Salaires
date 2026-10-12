@@ -28,6 +28,8 @@ Un paiement est un montant `paidAmount` en centimes et une date `paidDate`, ind�
 
 Les révisions PDF et leurs instantanés sont immuables. Un changement des données du document rend la paie courante non émise, sans toucher aux originaux. Les mois suivants sont recalculés ; leurs PDF ne deviennent obsolètes que si leurs données changent. Les exports concernés sont signalés comme dépassés. Les données antérieures nécessaires aux cumuls doivent être complètes, mais leur PDF n’a pas besoin d’être émis pour produire le suivant.
 
+Les fiches hors des dates de contrat actuelles restent conservées, mais sont exclues des antécédents du moteur (blocages, plafonds et treizième salaire). À l’ouverture, les années dont les fiches actives suivent des fiches hors contrat sont recalculées en mémoire pour actualiser les anciens résultats ; la prochaine sauvegarde conserve ce calcul. Les entrées, paiements, révisions PDF et données des exports restent inchangés ; les documents courants modifiés sont signalés comme à actualiser. Aucun changement de format JSON ou SQLite n’est nécessaire.
+
 L’annuel projette douze mois. Les prévisions sont des copies en mémoire, exclues des totaux enregistrés. Une édition, un paiement ou un PDF prépare le mois choisi et ses antécédents de calcul pour le seul employé concerné. Les années sans paramètres ne sont jamais assimilées à des taux zéro.
 
 Les thèmes sont des variables CSS de couleurs, avec structure et interactions identiques. La préférence est locale à l’appareil, sans données salariales.

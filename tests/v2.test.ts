@@ -11,6 +11,7 @@ import {
   recordPayment,
   issueRevision,
   refreshPayrolls,
+  refreshOutsideContractHistory,
 } from "../src/domain/service";
 import {
   exportRows,
@@ -230,4 +231,56 @@ it("makes only legacy divergent contribution fields into employee exceptions", (
   e.terms[0]!.overrides.find((c) => c.id === "aanp")!.employee = "1.7";
   upgradeState(s);
   expect(e.terms[0]!.overrides).toEqual([{ id: "aanp", employee: "1.7" }]);
+});
+
+it("repairs loaded contract history without changing inputs, payments, archives or unrelated payrolls", () => {
+  const s = fixture();
+  const e = s.employees[0]!;
+  const july = s.payrolls.find(
+    (p) => p.employeeId === e.id && p.period === "2026-07",
+  )!;
+  issueRevision(s, july, "original-pdf-bytes");
+  e.start = "2026-07-01";
+  for (const terms of e.terms) {
+    terms.mode = "hourly";
+    terms.salary = "26.40";
+    terms.lppEmployee = null;
+    terms.lppEmployer = null;
+  }
+  july.input.hours = "2";
+  july.result.errors = [
+    "previousMonthsIncomplete",
+    "lppEmployeeRequired",
+    "lppEmployerRequired",
+  ];
+  const before = clone(s);
+  refreshOutsideContractHistory(s);
+  expect(july.result.errors).toEqual([
+    "lppEmployeeRequired",
+    "lppEmployerRequired",
+  ]);
+  expect(july.result.lines[0]!.amount).toBe(5280);
+  expect(july.issued).toBe(false);
+  expect(s.revisions).toEqual(before.revisions);
+  expect(s.exports.map((e) => e.data)).toEqual(
+    before.exports.map((e) => e.data),
+  );
+  expect(s.employees).toEqual(before.employees);
+  expect(s.payrolls).toHaveLength(before.payrolls.length);
+  for (const old of before.payrolls) {
+    const current = s.payrolls.find((p) => p.id === old.id)!;
+    expect(current.input).toEqual(old.input);
+    expect(current.termOverrides).toEqual(old.termOverrides);
+    expect(current.paidAmount).toBe(old.paidAmount);
+    expect(current.paidDate).toBe(old.paidDate);
+    if (old.employeeId !== e.id || !old.period.startsWith("2026"))
+      expect(current).toEqual(old);
+  }
+  const once = clone(s);
+  refreshOutsideContractHistory(s);
+  expect(s).toEqual(once);
+  for (const terms of e.terms) terms.lpp = false;
+  refreshPayrolls(s, e.id, 2026);
+  expect(july.result.errors).toEqual([]);
+  expect(july.result.net).toBeGreaterThan(0);
 });

@@ -46,6 +46,7 @@ import {
   annualMissing,
   upgradeState,
   refreshPayrolls,
+  refreshOutsideContractHistory,
   ensurePayroll,
   updateEmployee,
   updateCompany,
@@ -407,6 +408,7 @@ async function restoreState(loaded: State | null) {
     return;
   }
   const s = upgradeState(clone(loaded));
+  refreshOutsideContractHistory(s);
   const added = backfillDemoHistory(s);
   if (added !== null) {
     for (const p of added.filter((p) => !p.result.errors.length)) {

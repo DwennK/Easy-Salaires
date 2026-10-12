@@ -48,6 +48,32 @@ function element(overrides: Partial<Input["elements"][number]> = {}) {
   };
 }
 describe("Swiss payroll engine", () => {
+  it("excludes out-of-contract history from errors, contribution ceilings and 13th salary", () => {
+    const { e, t, r, input } = setup();
+    t.thirteen = true;
+    t.thirteenMonth = 7;
+    const old = prior(e, "2026-06", calculate(e, t, r, input, "2026-06"));
+    old.result.errors = ["outsideContract", "hoursRequired"];
+    old.needsReview = true;
+    e.start = "2026-07-15";
+    const expected = calculate(e, t, r, input, "2026-07");
+    expect(expected.errors).toEqual([]);
+    expect(calculate(e, t, r, input, "2026-07", [old])).toEqual(expected);
+  });
+  it("still blocks on incomplete or unreviewed months within the contract", () => {
+    const { e, t, r, input } = setup();
+    e.start = "2026-07-15";
+    const july = prior(e, "2026-07", calculate(e, t, r, input, "2026-07"));
+    july.result.errors = ["hoursRequired"];
+    expect(calculate(e, t, r, input, "2026-08", [july]).errors).toContain(
+      "previousMonthsIncomplete",
+    );
+    july.result.errors = [];
+    july.needsReview = true;
+    expect(calculate(e, t, r, input, "2026-08", [july]).errors).toContain(
+      "previousMonthsIncomplete",
+    );
+  });
   it("pays CHF 3000 at 60%, deducts once and excludes employee deductions from employer cost", () => {
     const { e, t, r, input } = setup();
     const x = calculate(e, t, r, input, "2026-01");
