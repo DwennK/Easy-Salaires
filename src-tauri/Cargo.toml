@@ -1,6 +1,6 @@
 [package]
 name = "easy-salaires"
-version = "0.1.2"
+version = "0.1.3"
 description = "Offline Swiss payroll"
 edition = "2021"
 [lib]
