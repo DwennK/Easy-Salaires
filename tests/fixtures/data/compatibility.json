@@ -1,7 +1,7 @@
 {
   "dataModel": 2,
-  "persistedTypesSha256": "82ff4e2991508f7d3d3f48da4f3ad89351b74af064dca011539f1c7ce1bc8dc8",
-  "review": "Initial compatibility baseline: schema V1 upgrades to V2 metadata; legacy JSON model V1 upgrades to V2 while preserving payments and revision PDFs. Existing optional fields remain compatible.",
+  "persistedTypesSha256": "21516e0e793a90bd9f85700c4dedebd704ecda57ef47ddc95f6ea28ab29d9a58",
+  "review": "Additive model-2 small-salary policy in optional Terms.smallSalary and optional Calculation.smallSalary cumulative metadata. Missing fields preserve ordinary contributions and do not opt historical employees in. Existing JSON fixtures remain immutable; tests cover absent fields, JSON roundtrip, annual catch-up, corrected payrolls, preserved payments/revision PDFs, and native SQLite save/reopen/backup/restore of the new fields. No SQL schema or JSON model bump is required.",
   "immutable": {
     "src-tauri/migrations/001_initial.sql": "0a5de91265a84f44dda1819180b1267f5b59a5dfc901e1fa64da61ee953d8d57",
     "src-tauri/migrations/002_data_model.sql": "f6fdf4630814924cfc902a17c60109eaa8108387de253666a9db22878648b169",

@@ -257,6 +257,76 @@ export function calculate(
   const gross = sum(lines.map((l) => l.amount)) - reimbursements;
   if (salary < 0 || gross < 0) errors.push("negativeGross");
   const underage = Number.isFinite(age) && age < 18;
+  let smallSalary: Calculation["smallSalary"];
+  if (terms.smallSalary?.enabled) {
+    const policy = terms.smallSalary;
+    // Dated rules: do not silently carry a statutory threshold into a new year.
+    const threshold = [2025, 2026].includes(year) ? 250000 : 0;
+    const earnings = Math.max(0, avs);
+    const cumulative =
+      earnings +
+      sum(
+        earlier.map((p) => p.result.smallSalary?.earnings ?? p.result.avsBase),
+      );
+    smallSalary = {
+      earnings,
+      cumulative,
+      threshold,
+      exempt: false,
+      catchUp: 0,
+    };
+    if (policy.activity === "unknown")
+      errors.push("smallSalaryActivityRequired");
+    const eligible =
+      policy.activity === "ordinary" && policy.requested === false;
+    if (eligible && terms.avsStatus !== "standard")
+      errors.push("smallSalaryStatusConflict");
+    if (eligible && !threshold) errors.push("smallSalaryYearUnsupported");
+    if (eligible && threshold && terms.avsStatus === "standard" && !underage) {
+      smallSalary.exempt = cumulative <= threshold;
+      if (smallSalary.exempt) {
+        avs = 0;
+        warnings.push("smallSalaryExempt");
+      } else {
+        // Prior deferred wages enter the contribution base in the crossing month.
+        avs = Math.max(
+          0,
+          cumulative - sum(earlier.map((p) => p.result.avsBase)),
+        );
+        smallSalary.catchUp = Math.max(0, avs - earnings);
+        if (smallSalary.catchUp > 0) {
+          warnings.push("smallSalaryCatchUp");
+          const signature = (r: Rules, t: Terms) =>
+            JSON.stringify(
+              r.contributions
+                .map((c) => ({
+                  ...c,
+                  ...t.overrides.find((o) => o.id === c.id),
+                }))
+                .filter((c) =>
+                  ["avs", "ac", "avsContributions"].includes(c.base),
+                )
+                .map(({ id, active, kind, base, employee, employer }) => ({
+                  id,
+                  active,
+                  kind,
+                  base,
+                  employee,
+                  employer,
+                })),
+            );
+          if (
+            earlier.some(
+              (p) =>
+                p.result.smallSalary?.exempt &&
+                signature(p.rules, p.terms) !== signature(rules, terms),
+            )
+          )
+            errors.push("smallSalaryRatesChanged");
+        }
+      }
+    }
+  }
   if (underage || terms.avsStatus === "exempt") avs = 0;
   else if (terms.avsStatus === "retired") avs = Math.max(0, avs - 140000);
   const acEligible = !underage && terms.avsStatus === "standard";
@@ -289,7 +359,7 @@ export function calculate(
       !c.active ||
       (c.id === "aanp" && weekly.lt(8)) ||
       ((c.id === "avs" || c.id === "ac") &&
-        (underage || terms.avsStatus === "exempt")) ||
+        (underage || terms.avsStatus === "exempt" || smallSalary?.exempt)) ||
       (c.id === "ac" && !acEligible)
     )
       continue;
@@ -344,6 +414,7 @@ export function calculate(
     employerCost = sum(lines.map((l) => l.employer));
   if (base + absence < 0) errors.push("absenceTooHigh");
   return {
+    ...(smallSalary ? { smallSalary } : {}),
     lines,
     gross,
     deductions,

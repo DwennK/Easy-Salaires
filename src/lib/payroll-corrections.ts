@@ -9,6 +9,10 @@ export interface PayrollCorrection {
 }
 
 const termFields: Record<string, [keyof Terms, string]> = {
+  smallSalaryActivityRequired: ["smallSalary", "insurance"],
+  smallSalaryStatusConflict: ["smallSalary", "insurance"],
+  smallSalaryYearUnsupported: ["smallSalary", "insurance"],
+  smallSalaryRatesChanged: ["smallSalary", "insurance"],
   lppEmployeeRequired: ["lppEmployee", "insurance"],
   lppEmployerRequired: ["lppEmployer", "insurance"],
   exemptionReasonRequired: ["exemptionReason", "insurance"],

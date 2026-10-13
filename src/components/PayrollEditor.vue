@@ -285,6 +285,15 @@ function payload() {
           </button></template
         >
       </div>
+      <p v-if="result.smallSalary" class="notice">
+        {{ tr("smallSalaryCumulative") }} :
+        {{ money(result.smallSalary.cumulative) }} CHF /
+        {{ money(result.smallSalary.threshold) }} CHF.
+        <span v-if="result.smallSalary.catchUp"
+          >{{ tr("smallSalaryCatchUpAmount") }} :
+          {{ money(result.smallSalary.catchUp) }} CHF.</span
+        >
+      </p>
       <p class="notice" v-for="warning in result.warnings" :key="warning">
         {{ tr(warning) }}
       </p>

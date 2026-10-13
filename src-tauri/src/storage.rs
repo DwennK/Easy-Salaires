@@ -586,6 +586,29 @@ mod tests {
         assert!(db.save(&s).is_err());
     }
     #[test]
+    fn optional_small_salary_fields_survive_save_backup_and_restore() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut s: Value =
+            serde_json::from_str(include_str!("../../tests/fixtures/data/model-v2.json")).unwrap();
+        let original_revisions = s["revisions"].clone();
+        s["version"] = json!(0);
+        s["employees"][0]["terms"][0]["smallSalary"] =
+            json!({"enabled":true,"activity":"ordinary","requested":false});
+        s["payrolls"][0]["result"]["smallSalary"] = json!({"earnings":10000,"cumulative":10000,"threshold":250000,"exempt":true,"catchUp":0});
+        let path = tmp.path().join("small-salary.db");
+        let mut db = Database::open(&path, true, None).unwrap();
+        s["version"] = json!(db.save(&s).unwrap());
+        let backup = tmp.path().join("backup.db");
+        db.backup(&backup).unwrap();
+        drop(db);
+        let reopened = Database::open(&path, false, None).unwrap();
+        assert_eq!(reopened.load().unwrap().unwrap(), s);
+        let restored = Database::restore(&backup, &tmp.path().join("restored.db"), None).unwrap();
+        let loaded = restored.load().unwrap().unwrap();
+        assert_eq!(loaded, s);
+        assert_eq!(loaded["revisions"], original_revisions);
+    }
+    #[test]
     fn persistence_backup_and_lock() {
         let tmp = tempfile::tempdir().unwrap();
         let p = tmp.path().join("company.db");

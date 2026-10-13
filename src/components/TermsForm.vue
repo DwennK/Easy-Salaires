@@ -15,6 +15,17 @@ const props = withDefaults(
   }>(),
   { part: "all" },
 );
+const smallSalaryEnabled = computed({
+  get: () => model.value.smallSalary?.enabled ?? false,
+  set: (enabled: boolean) => {
+    model.value.smallSalary = {
+      activity: "unknown",
+      requested: true,
+      ...model.value.smallSalary,
+      enabled,
+    };
+  },
+});
 const salaryValid = computed(() => validAmount(model.value.salary));
 </script>
 <template>
@@ -167,6 +178,53 @@ const salaryValid = computed(() => validAmount(model.value.salary));
     v-if="part !== 'contract'"
     :class="{ 'form-section': part === 'all' }"
   >
+    <section class="form-section" data-correction="smallSalary">
+      <h3>{{ tr("smallSalaryTitle") }}</h3>
+      <label class="check"
+        ><input type="checkbox" v-model="smallSalaryEnabled" />{{
+          tr("smallSalaryEnable")
+        }}</label
+      >
+      <p class="hint">{{ tr("smallSalaryHelp") }}</p>
+      <template v-if="smallSalaryEnabled && model.smallSalary">
+        <label class="field"
+          ><span>{{ tr("smallSalaryActivity") }}</span>
+          <select
+            v-model="model.smallSalary.activity"
+            :aria-label="tr('smallSalaryActivity')"
+          >
+            <option
+              v-for="activity in [
+                'unknown',
+                'ordinary',
+                'domestic',
+                'excluded',
+              ]"
+              :key="activity"
+              :value="activity"
+            >
+              {{ tr(`smallSalaryActivity_${activity}`) }}
+            </option>
+          </select>
+        </label>
+        <label class="check"
+          ><input type="checkbox" v-model="model.smallSalary.requested" />{{
+            tr("smallSalaryRequested")
+          }}</label
+        >
+        <p class="notice">
+          {{
+            tr(
+              model.smallSalary.activity === "ordinary" &&
+                !model.smallSalary.requested
+                ? "smallSalaryAutomaticHelp"
+                : "smallSalaryMandatoryHelp",
+            )
+          }}
+        </p>
+        <p class="hint">{{ tr("smallSalaryHistoryHelp") }}</p>
+      </template>
+    </section>
     <h3>{{ tr("pensionTitle") }}</h3>
     <p class="hint">{{ tr("insuranceEmployeeHelp") }}</p>
     <label class="check"

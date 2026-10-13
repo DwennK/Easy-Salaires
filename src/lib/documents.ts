@@ -392,6 +392,34 @@ export async function payslipPdf(
     paragraph(p.employee.iban, left, width, 9);
     y -= 12;
   }
+  if (p.result.smallSalary) {
+    const info = p.result.smallSalary;
+    if (info.exempt || info.catchUp) {
+      paragraph(
+        tr(info.exempt ? "smallSalaryExempt" : "smallSalaryCatchUp", l),
+        left,
+        width,
+        8,
+        muted,
+      );
+      paragraph(
+        `${tr("smallSalaryCumulative", l)} : CHF ${money(info.cumulative, l)} / ${money(info.threshold, l)}.`,
+        left,
+        width,
+        8,
+        muted,
+      );
+      if (info.catchUp)
+        paragraph(
+          `${tr("smallSalaryCatchUpAmount", l)} : CHF ${money(info.catchUp, l)}.`,
+          left,
+          width,
+          8,
+          muted,
+        );
+      y -= 10;
+    }
+  }
   if (p.input.note) {
     ensure(45);
     text(tr("payslipNote", l).toLocaleUpperCase(l), left, y, 7.5, muted, bold);

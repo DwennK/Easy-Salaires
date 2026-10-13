@@ -36,6 +36,12 @@ export interface Terms {
   workDays: string;
   avsStatus: "standard" | "exempt" | "retired" | "retiredWaiver";
   exemptionReason: string;
+  /** Opt-in annual small-salary policy. Missing means ordinary contributions. */
+  smallSalary?: {
+    enabled: boolean;
+    activity: "unknown" | "ordinary" | "domestic" | "excluded";
+    requested: boolean;
+  };
   lpp: boolean;
   lppEmployee: string | null;
   lppEmployer: string | null;
@@ -122,6 +128,14 @@ export interface Line {
   ruleVersion: string;
 }
 export interface Calculation {
+  /** Only present when annual small-salary tracking is enabled; cents. */
+  smallSalary?: {
+    earnings: number;
+    cumulative: number;
+    threshold: number;
+    exempt: boolean;
+    catchUp: number;
+  };
   reimbursements?: number;
   lines: Line[];
   gross: number;

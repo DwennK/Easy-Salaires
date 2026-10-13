@@ -5,6 +5,81 @@ import { uiCopy } from "./ui-copy";
 import type { Lang } from "../domain/types";
 export const lang = ref<Lang>("fr");
 const pairs: Record<string, [string, string]> = {
+  smallSalaryTitle: [
+    "Petits salaires annuels — AVS / AC",
+    "Small annual salaries — OASI / UI",
+  ],
+  smallSalaryEnable: [
+    "Suivre automatiquement le seuil annuel",
+    "Track the annual threshold automatically",
+  ],
+  smallSalaryHelp: [
+    "Seuil de CHF 2’500 par personne et par employeur en 2025 et 2026. Les assurances accidents restent réglées séparément. Ce suivi ne transmet aucune déclaration à la caisse.",
+    "CHF 2,500 per employee and employer in 2025 and 2026. Accident insurance is configured separately. Tracking does not file a declaration with the fund.",
+  ],
+  smallSalaryActivity: ["Lieu / type d’activité", "Workplace / activity"],
+  smallSalaryActivity_unknown: ["À préciser", "Select an activity"],
+  smallSalaryActivity_ordinary: [
+    "Activité ordinaire (ex. nettoyage d’un cabinet)",
+    "Ordinary activity (e.g. cleaning business premises)",
+  ],
+  smallSalaryActivity_domestic: [
+    "Ménage dans un domicile privé",
+    "Domestic work in a private home",
+  ],
+  smallSalaryActivity_excluded: [
+    "Employeur culturel / artistique soumis dès le premier franc",
+    "Cultural / artistic employer with contributions from the first franc",
+  ],
+  smallSalaryRequested: [
+    "L’employé demande à cotiser même sous le seuil",
+    "The employee requests contributions even below the threshold",
+  ],
+  smallSalaryAutomaticHelp: [
+    "Jusqu’à CHF 2’500 inclus : pas de cotisations AVS/AI/APG/AC. Au dépassement, le mois reprend tout le salaire annuel encore non soumis aux cotisations, pas seulement le dépassement. Saisissez tous les salaires de cette personne chez cet employeur.",
+    "Up to and including CHF 2,500: no OASI/DI/IC/UI contributions. When exceeded, the month includes all annual wages not yet subject to contributions, not just the excess. Enter all wages paid by this employer to this person.",
+  ],
+  smallSalaryMandatoryHelp: [
+    "Les cotisations ordinaires restent appliquées si l’activité n’est pas éligible ou si l’employé demande à cotiser. Le cas particulier des jeunes employés de maison n’est pas automatisé ici.",
+    "Ordinary contributions remain applicable for ineligible activities or when the employee requests them. The special case of young domestic workers is not automated here.",
+  ],
+  smallSalaryHistoryHelp: [
+    "Avant de changer un régime déjà appliqué à des salaires payés ou décomptés à la caisse, vérifiez le traitement avec elle. Les paiements et les anciens PDF sont conservés.",
+    "Before changing a policy already applied to wages paid or settled with the fund, confirm the treatment with the fund. Recorded payments and archived PDFs are retained.",
+  ],
+  smallSalaryActivityRequired: [
+    "Précisez l’activité pour le suivi des petits salaires.",
+    "Select the activity for small-salary tracking.",
+  ],
+  smallSalaryStatusConflict: [
+    "Le seuil automatique nécessite le statut AVS ordinaire ; il ne se cumule pas avec une exonération ou une franchise de retraite.",
+    "Automatic threshold tracking requires ordinary OASI status; it cannot be combined with another exemption or retirement allowance.",
+  ],
+  smallSalaryYearUnsupported: [
+    "Le seuil des petits salaires est vérifié pour 2025 et 2026 uniquement. Désactivez ce suivi pour une autre année et faites valider son régime.",
+    "The small-salary threshold is verified for 2025 and 2026 only. Disable tracking for other years and confirm the applicable policy.",
+  ],
+  smallSalaryRatesChanged: [
+    "Les taux ont changé pendant la période sans cotisations. Faites vérifier le rattrapage avant d’émettre cette fiche.",
+    "Rates changed during the contribution-free period. Have the catch-up reviewed before issuing this payslip.",
+  ],
+  smallSalaryExempt: [
+    "Petit salaire : cotisations AVS/AI/APG/AC non perçues sous le seuil annuel.",
+    "Small salary: no OASI/DI/IC/UI contributions below the annual threshold.",
+  ],
+  smallSalaryCatchUp: [
+    "Seuil annuel dépassé : la base de cotisations comprend le rattrapage des salaires précédents non soumis.",
+    "Annual threshold exceeded: the contribution base includes catch-up for previously exempt wages.",
+  ],
+  smallSalaryCumulative: [
+    "Salaire AVS cumulé avant application du seuil",
+    "Cumulative OASI wages before applying the threshold",
+  ],
+  smallSalaryCatchUpAmount: [
+    "Salaire précédent repris dans la base de cotisations",
+    "Previous wages added to the contribution base",
+  ],
+
   hourlyAllowanceBase: [
     "Salaire de base des heures normales",
     "Base pay for regular hours",
