@@ -49,6 +49,9 @@ const insurance = (c: Contribution) => ["aap", "aanp", "ijm"].includes(c.id);
         >
       </div>
       <template v-if="c.active">
+        <p v-if="c.id === 'aap' || c.id === 'avs'" class="hint">
+          {{ tr(c.id === "aap" ? "aapRateHelp" : "avsCombinedHelp") }}
+        </p>
         <div class="form-grid contribution-rates">
           <Field
             :data-correction="`contribution:${c.id}:employee`"

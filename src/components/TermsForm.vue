@@ -37,10 +37,10 @@ const salaryValid = computed(() => validAmount(model.value.salary));
         class="span-2"
         data-correction="salary"
         v-model="model.salary"
-        :label="tr(model.mode === 'monthly' ? 'salary' : 'rate')"
+        :label="tr(model.mode === 'monthly' ? 'salary' : 'hourlyBaseRate')"
         inputmode="decimal"
         required
-        :hint="model.mode === 'monthly' ? tr('salaryHelp') : undefined"
+        :hint="tr(model.mode === 'monthly' ? 'salaryHelp' : 'hourlyBaseHelp')"
         :error="errors?.salary"
       />
     </div>
@@ -59,6 +59,7 @@ const salaryValid = computed(() => validAmount(model.value.salary));
         v-model="model.weeklyHours"
         :label="tr('weeklyHours')"
         inputmode="decimal"
+        :hint="tr('weeklyHoursInsuranceHelp')"
       /><Field
         data-correction="workDays"
         v-model="model.workDays"
@@ -118,26 +119,40 @@ const salaryValid = computed(() => validAmount(model.value.salary));
           /><label class="field"
             ><span>{{ tr("base") }}</span
             ><select v-model="model.holidayBase">
-              <option value="base">{{ tr("monthlySalary") }}</option>
+              <option value="base">{{ tr("hourlyAllowanceBase") }}</option>
               <option value="baseOvertime">{{ tr("baseOvertime") }}</option>
             </select></label
           >
         </div>
+        <h3>{{ tr("vacationPaymentTitle") }}</h3>
         <label class="check"
           ><input type="checkbox" v-model="model.vacation" />{{
-            tr("vacation")
+            tr("vacationWithHours")
           }}</label
         >
+        <p class="hint">
+          {{
+            tr(
+              model.vacation ? "vacationWithHoursHelp" : "vacationSeparateHelp",
+            )
+          }}
+        </p>
+        <details class="notice">
+          <summary>{{ tr("vacationIncludedTitle") }}</summary>
+          <p>{{ tr("vacationIncludedHelp") }}</p>
+          <p>{{ tr("vacationIncludedExample") }}</p>
+        </details>
         <div v-if="model.vacation" class="form-grid inset">
           <Field
             data-correction="vacationRate"
             v-model="model.vacationRate"
             :label="tr('vacationRate')"
             inputmode="decimal"
+            :hint="tr('vacationRateHelp')"
           /><label class="field"
             ><span>{{ tr("base") }}</span
             ><select v-model="model.vacationBase">
-              <option value="base">{{ tr("monthlySalary") }}</option>
+              <option value="base">{{ tr("hourlyAllowanceBase") }}</option>
               <option value="baseHoliday">{{ tr("baseHoliday") }}</option>
             </select></label
           >

@@ -5,6 +5,62 @@ import { uiCopy } from "./ui-copy";
 import type { Lang } from "../domain/types";
 export const lang = ref<Lang>("fr");
 const pairs: Record<string, [string, string]> = {
+  hourlyAllowanceBase: [
+    "Salaire de base des heures normales",
+    "Base pay for regular hours",
+  ],
+  hourlyBaseRate: [
+    "Salaire horaire de base, hors indemnités (CHF)",
+    "Base hourly wage, excluding allowances (CHF)",
+  ],
+  hourlyBaseHelp: [
+    "Multiplié par les heures saisies chaque mois. Les indemnités activées ci-dessous s’ajoutent à cette base. Si votre tarif comprend déjà les vacances, consultez l’aide « Mon tarif comprend déjà les vacances ».",
+    "Multiplied by the hours entered each month. Allowances enabled below are added to this base. If your rate already includes holiday pay, see ‘My rate already includes holiday pay’ below.",
+  ],
+  weeklyHoursInsuranceHelp: [
+    "Horaire de cette personne chez vous, pas celui d’un plein temps. Le taux d’activité ne réduit pas ce nombre. Il sert notamment à déterminer la couverture accidents non professionnels (dès 8 h/semaine). Pour un horaire irrégulier, confirmez la moyenne à retenir avec l’assureur.",
+    "This person’s hours with you, not full-time hours. The employment percentage does not reduce this number. It is used for non-occupational accident coverage (from 8 hours/week). For irregular hours, confirm the relevant average with the insurer.",
+  ],
+  vacationPaymentTitle: [
+    "Comment sont payées les vacances ?",
+    "How is holiday pay handled?",
+  ],
+  vacationWithHours: [
+    "Verser une indemnité de vacances avec chaque paie horaire",
+    "Pay a holiday allowance with each hourly payslip",
+  ],
+  vacationWithHoursHelp: [
+    "Une part pour les vacances est versée avec les heures travaillées et apparaît séparément sur la fiche. Avec 0 heure et aucun autre élément de salaire, la base et cette indemnité sont à 0. Ce mode convient seulement aux situations qui autorisent ce versement, notamment le temps partiel irrégulier, avec mention dans le contrat et sur la fiche.",
+    "Holiday pay is paid with worked hours and shown separately on the payslip. With 0 hours and no other earnings, both base pay and this allowance are 0. Use only where this payment method is permitted, notably irregular part-time work, with a separate statement in the contract and payslip.",
+  ],
+  vacationSeparateHelp: [
+    "Aucune indemnité de vacances n’est ajoutée automatiquement. Si les vacances sont payées au moment du congé, leur rémunération reste à saisir séparément. Être payé à l’heure ne supprime pas le droit aux vacances.",
+    "No holiday allowance is added automatically. If holidays are paid when leave is taken, that pay must be entered separately. Being paid by the hour does not remove holiday entitlement.",
+  ],
+  vacationIncludedTitle: [
+    "Mon tarif comprend déjà les vacances",
+    "My rate already includes holiday pay",
+  ],
+  vacationIncludedHelp: [
+    "Ne cochez pas l’option en conservant le tarif tout compris comme salaire de base : cela ajouterait les vacances une deuxième fois. Confirmez d’abord le droit annuel prévu au contrat, puis séparez la base et l’indemnité : base = tarif tout compris ÷ (1 + taux de vacances / 100).",
+    "Do not enable the option while keeping the all-inclusive rate as the base wage: this would add holiday pay twice. First confirm the annual contractual entitlement, then split the base wage and allowance: base = inclusive rate ÷ (1 + holiday percentage / 100).",
+  ],
+  vacationIncludedExample: [
+    "Exemple avec 4 semaines (8.33 %) : 26.40 CHF/h tout compris correspondent à environ 24.37 CHF de base + 2.03 CHF de vacances par heure. Le nombre de mois sans travail ne détermine pas ce taux. Si vous ne connaissez pas le droit prévu, vérifiez le contrat avant de modifier ces champs.",
+    "Example with 4 weeks (8.33%): an inclusive 26.40 CHF/hour is approximately 24.37 CHF base pay + 2.03 CHF holiday pay per hour. Months without work do not determine this rate. If the entitlement is unknown, check the contract before changing these fields.",
+  ],
+  vacationRateHelp: [
+    "Selon le droit annuel confirmé : 4 semaines = 8.33 %, 5 semaines = 10.64 %. Il ne s’agit pas du nombre de semaines d’absence de ce mois.",
+    "Based on confirmed annual entitlement: 4 weeks = 8.33%, 5 weeks = 10.64%. This is not the number of weeks absent this month.",
+  ],
+  aapRateHelp: [
+    "Accidents professionnels : à la charge de l’entreprise, donc 0 côté salarié. Le taux employeur vient de la police d’assurance accidents. Le 4.35 % AVS n’est pas un taux accidents. Ces champs sont en % : 4.35 ‰ = 0.435 %.",
+    "Occupational accidents: paid by the company, so the employee share is 0. Use the rate from the accident insurance policy for the employer. The 4.35% OASI rate is not an accident insurance rate. These fields use percentages: 4.35‰ = 0.435%.",
+  ],
+  avsCombinedHelp: [
+    "Le taux regroupe trois cotisations : AVS 4.35 % + AI 0.70 % + APG 0.25 % = 5.30 % pour chaque partie (taux 2026). N’ajoutez pas l’AVS une deuxième fois dans les assurances accidents.",
+    "This combines three contributions: OASI 4.35% + DI 0.70% + IC 0.25% = 5.30% for each party (2026 rates). Do not add OASI again under accident insurance.",
+  ],
   invalidLogo: [
     "Le logo ne peut pas être lu. Choisissez une image PNG ou JPEG valide.",
     "The logo cannot be read. Choose a valid PNG or JPEG image.",
