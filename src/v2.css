@@ -595,7 +595,18 @@ select:focus-visible {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 3px;
+  gap: 8px;
+}
+.salary-rate,
+.hours-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.salary-unit,
+.salary-operator {
+  font-size: 10px;
+  color: var(--muted);
 }
 .grid-input {
   width: 90px;
@@ -612,28 +623,8 @@ select:focus-visible {
 .grid-input:focus {
   border-color: var(--green);
 }
-.cell-repeat {
-  display: grid;
-  place-items: center;
-  border: 0;
-  background: none;
-  padding: 3px;
-  color: var(--muted);
-}
-.cell-repeat:hover {
-  color: var(--green);
-}
-.hours-cell {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  font-size: 10px;
-  color: var(--muted);
-  gap: 4px;
-  margin-top: 3px;
-}
 .hours-cell .grid-input {
-  width: 78px;
+  width: 60px;
 }
 .grid-edit-button {
   display: flex;

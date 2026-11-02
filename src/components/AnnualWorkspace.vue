@@ -2,6 +2,7 @@
 import { computed, ref, watch } from "vue";
 import {
   ArrowRight,
+  Copy,
   FileText,
   Eye,
   Plus,
@@ -315,39 +316,41 @@ watch(
               <template v-if="row.p && row.active">
                 <td>
                   <div class="salary-cell">
-                    <input
-                      class="grid-input"
-                      inputmode="decimal"
-                      :aria-label="`${tr('baseSalary')} ${months()[i]}`"
-                      :value="decimalText(row.p.terms.salary)"
-                      :disabled="busy"
-                      @change="change(row.period, 'salary', $event)"
-                    /><button
-                      class="cell-repeat"
-                      :disabled="busy"
-                      :aria-label="`${tr('applyFollowing')} ${months()[i]}`"
-                      @click="
-                        repeat = {
-                          period: row.period,
-                          value: row.p!.terms.salary,
-                        }
-                      "
+                    <label class="salary-rate">
+                      <input
+                        class="grid-input"
+                        inputmode="decimal"
+                        :aria-label="`${tr(row.p.terms.mode === 'hourly' ? 'hourlySalary' : 'baseSalary')} ${months()[i]}`"
+                        :value="decimalText(row.p.terms.salary)"
+                        :disabled="busy"
+                        @change="change(row.period, 'salary', $event)"
+                      />
+                      <span class="salary-unit">{{
+                        row.p.terms.mode === "hourly" ? "CHF/h" : "CHF"
+                      }}</span>
+                    </label>
+                    <span
+                      v-if="row.p.terms.mode === 'hourly'"
+                      class="salary-operator"
+                      aria-hidden="true"
+                      >×</span
                     >
-                      <ArrowRight :size="13" />
-                    </button>
+                    <label
+                      v-if="row.p.terms.mode === 'hourly'"
+                      class="hours-cell"
+                      ><input
+                        class="grid-input"
+                        inputmode="decimal"
+                        :aria-label="`${tr('hours')} ${months()[i]}`"
+                        :value="decimalText(row.p.input.hours)"
+                        :placeholder="tr('hours')"
+                        :disabled="busy"
+                        @change="change(row.period, 'hours', $event)"
+                      />
+                      <span class="salary-unit">h</span></label
+                    >
                   </div>
-                  <label v-if="row.p.terms.mode === 'hourly'" class="hours-cell"
-                    ><input
-                      class="grid-input"
-                      inputmode="decimal"
-                      :aria-label="`${tr('hours')} ${months()[i]}`"
-                      :value="decimalText(row.p.input.hours)"
-                      :placeholder="tr('hours')"
-                      :disabled="busy"
-                      @change="change(row.period, 'hours', $event)"
-                    />
-                    h</label
-                  ><button
+                  <button
                     v-if="row.p.termOverrides?.salary !== undefined"
                     class="inherited-reset"
                     :disabled="busy"
@@ -423,6 +426,20 @@ watch(
                 </td>
                 <td>
                   <div class="payroll-pdf-actions">
+                    <button
+                      class="icon-button pdf-action"
+                      :disabled="busy"
+                      :aria-label="`${tr('applyFollowing')} ${months()[i]}`"
+                      :title="tr('applyFollowing')"
+                      @click="
+                        repeat = {
+                          period: row.period,
+                          value: row.p!.terms.salary,
+                        }
+                      "
+                    >
+                      <Copy :size="17" />
+                    </button>
                     <button
                       class="icon-button pdf-action"
                       :disabled="busy || row.p.result.errors.length > 0"
