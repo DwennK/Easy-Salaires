@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { tr } from "../lib/i18n";
-const themes = ["kiwi", "ocean", "lavender", "terracotta"];
-const defaultTheme = "ocean";
+const themes = ["rose", "kiwi", "ocean", "lavender", "terracotta"];
+const defaultTheme = "rose";
 let stored = defaultTheme;
 try {
   stored = localStorage.getItem("easy-salaires-theme") || defaultTheme;

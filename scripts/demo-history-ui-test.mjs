@@ -125,7 +125,7 @@ try {
       // Reproduce the bug by opening existing storage, never clicking "new demo".
       await page.reload();
     }
-    await page.getByRole("heading", { name: "Les salaires." }).waitFor();
+    await page.getByRole("heading", { name: "Les salaires" }).waitFor();
     const migrated =
       mode === "web" ? await readPreview(page) : clone(nativeSaved);
     assert.equal(migrated.company.demoHistoryVersion, 1);
@@ -163,7 +163,7 @@ try {
       fullPage: true,
     });
     await page.reload();
-    await page.getByRole("heading", { name: "Les salaires." }).waitFor();
+    await page.getByRole("heading", { name: "Les salaires" }).waitFor();
     const reloaded =
       mode === "web" ? await readPreview(page) : clone(nativeSaved);
     assert.deepEqual(reloaded, migrated);

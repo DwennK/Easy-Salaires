@@ -55,7 +55,7 @@ page.setDefaultTimeout(15000);
 try {
   await page.goto(process.env.UI_URL || "http://127.0.0.1:1423");
   await page
-    .getByRole("heading", { name: "Les salaires.", exact: true })
+    .getByRole("heading", { name: "Les salaires", exact: true })
     .waitFor();
   const previewButtons = page.locator(
     'button[aria-label^="Voir le PDF"]:not(:disabled)',

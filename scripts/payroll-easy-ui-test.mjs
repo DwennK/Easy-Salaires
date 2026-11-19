@@ -47,7 +47,7 @@ try {
   await page
     .getByRole("button", { name: "Essayer la démonstration", exact: true })
     .click();
-  await page.getByRole("heading", { name: "Les salaires." }).waitFor();
+  await page.getByRole("heading", { name: "Les salaires" }).waitFor();
   await page.getByRole("button", { name: "Kiwi", exact: true }).click();
   await page
     .getByRole("button", { name: "Salaires du mois", exact: true })
@@ -214,7 +214,7 @@ try {
     1,
   );
   await page.reload();
-  await page.getByRole("heading", { name: "Les salaires." }).waitFor();
+  await page.getByRole("heading", { name: "Les salaires" }).waitFor();
   const reloaded = await state();
   assert.equal(find(reloaded, camille, "2026-01").terms.salary, "5800");
   assert.deepEqual(reloaded.revisions, s.revisions);

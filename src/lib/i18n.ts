@@ -212,10 +212,10 @@ const pairs: Record<string, [string, string]> = {
     ".db file · includes company, employees and documents.",
   ],
   offline: ["Hors ligne · Données locales", "Offline · Local data"],
-  welcome: ["Votre paie, en toute simplicité.", "Payroll, simply."],
+  welcome: ["Ouvrir un espace de paie", "Open a payroll workspace"],
   welcomeText: [
-    "Un espace de travail local pour les salaires de votre entreprise.",
-    "A local workspace for your company’s payroll.",
+    "Créez votre entreprise ou reprenez un fichier de paie existant.",
+    "Create a company or open an existing payroll file.",
   ],
   create: ["Créer une entreprise", "Create a company"],
   open: ["Ouvrir un fichier .db", "Open a .db file"],

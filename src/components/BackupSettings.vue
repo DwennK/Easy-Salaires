@@ -118,7 +118,7 @@ defineEmits<{ backup: []; folder: []; restore: [] }>();
 .backup-card {
   padding: 24px;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--panel-radius);
   background: var(--surface);
 }
 .backup-card-heading {
@@ -131,7 +131,6 @@ defineEmits<{ backup: []; folder: []; restore: [] }>();
 }
 .backup-card h2 {
   margin: 0;
-  font-size: 19px;
 }
 .backup-card p {
   margin: 10px 0 18px;
@@ -196,9 +195,6 @@ defineEmits<{ backup: []; folder: []; restore: [] }>();
 @media (max-width: 600px) {
   .backup-card {
     padding: 18px;
-  }
-  .backup-card h2 {
-    font-size: 17px;
   }
   .backup-folder-row {
     align-items: stretch;

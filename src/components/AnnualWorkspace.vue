@@ -163,50 +163,50 @@ watch(
 </script>
 <template>
   <section class="annual-workspace">
-    <div class="year-workbar">
-      <label class="employee-picker"
-        ><span>{{ tr("employee") }}</span
-        ><select v-model="employeeId" :aria-label="tr('employee')">
-          <option v-for="e in allEmployees" :key="e.id" :value="e.id">
-            {{ e.firstName }} {{ e.lastName
-            }}{{ e.archived ? ` · ${tr("archived")}` : "" }}
-          </option>
-        </select></label
-      >
-      <div class="year-stepper">
+    <div class="year-context">
+      <div class="year-workbar">
+        <label class="employee-picker"
+          ><span>{{ tr("employee") }}</span
+          ><select v-model="employeeId" :aria-label="tr('employee')">
+            <option v-for="e in allEmployees" :key="e.id" :value="e.id">
+              {{ e.firstName }} {{ e.lastName
+              }}{{ e.archived ? ` · ${tr("archived")}` : "" }}
+            </option>
+          </select></label
+        >
+        <div class="year-stepper">
+          <button
+            class="icon-button"
+            :aria-label="tr('previousYear')"
+            @click="year--"
+          >
+            <ChevronLeft :size="17" /></button
+          ><input
+            type="number"
+            min="2000"
+            max="2100"
+            v-model.number="year"
+            :aria-label="tr('year')"
+          /><button
+            class="icon-button"
+            :aria-label="tr('nextYear')"
+            @click="year++"
+          >
+            <ChevronRight :size="17" />
+          </button>
+        </div>
         <button
-          class="icon-button"
-          :aria-label="tr('previousYear')"
-          @click="year--"
+          v-if="employee"
+          class="button secondary"
+          @click="emit('editEmployee', clone(employee))"
         >
-          <ChevronLeft :size="17" /></button
-        ><input
-          type="number"
-          min="2000"
-          max="2100"
-          v-model.number="year"
-          :aria-label="tr('year')"
-        /><button
-          class="icon-button"
-          :aria-label="tr('nextYear')"
-          @click="year++"
-        >
-          <ChevronRight :size="17" />
+          <Pencil :size="15" />{{ tr("employeeInformation") }}
+        </button>
+        <button v-else class="button primary" @click="emit('addEmployee')">
+          <Plus :size="16" />{{ tr("addEmployee") }}
         </button>
       </div>
-      <button
-        v-if="employee"
-        class="button secondary"
-        @click="emit('editEmployee', clone(employee))"
-      >
-        <Pencil :size="15" />{{ tr("employeeInformation") }}
-      </button>
-      <button v-else class="button primary" @click="emit('addEmployee')">
-        <Plus :size="16" />{{ tr("addEmployee") }}
-      </button>
-    </div>
-    <template v-if="employee">
-      <div class="year-overview">
+      <div v-if="employee" class="year-overview">
         <div class="year-identity">
           <span class="v2-avatar"
             >{{ employee.firstName[0] }}{{ employee.lastName[0] }}</span
@@ -225,6 +225,8 @@ watch(
           ><strong>{{ fmt(totals.paid) }} <small>CHF</small></strong>
         </div>
       </div>
+    </div>
+    <template v-if="employee">
       <section
         v-if="blockers.length"
         id="payroll-blockers"
@@ -266,8 +268,11 @@ watch(
         <p>{{ tr("incompleteTotals") }}</p>
       </section>
       <div class="year-table-caption">
-        <span>{{ tr("annualEditingHelp") }}</span
-        ><span class="table-legend"><i></i>{{ tr("editableCells") }}</span>
+        <div>
+          <h2>{{ tr("yearTable") }}</h2>
+          <span>{{ tr("annualEditingHelp") }}</span>
+        </div>
+        <span class="table-legend"><i></i>{{ tr("editableCells") }}</span>
       </div>
       <div class="year-table-scroll" tabindex="0" :aria-label="tr('yearTable')">
         <table class="year-grid">

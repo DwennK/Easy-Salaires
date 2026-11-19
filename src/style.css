@@ -1,5 +1,5 @@
 :root {
-  font-family: Inter, Arial, sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", Inter, sans-serif;
   color: var(--ink);
   background: var(--surface);
   font-synthesis: none;
@@ -508,7 +508,7 @@ table {
 th {
   text-align: left;
   padding: 13px 12px;
-  background: var(--accent);
+  background: var(--wash);
   color: var(--muted);
   font-size: 9px;
   font-weight: 500;
@@ -527,7 +527,7 @@ tbody tr {
   transition: background 0.12s;
 }
 tbody tr:hover {
-  background: var(--accent);
+  background: var(--hover);
 }
 td > small {
   display: block;
@@ -857,7 +857,7 @@ dialog {
   max-height: calc(100dvh - 48px);
   background: var(--surface);
   color: inherit;
-  box-shadow: 0 25px 90px #1a322529;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 12%);
   overflow: hidden;
 }
 dialog[open] {
@@ -866,7 +866,7 @@ dialog[open] {
   animation: appear 0.17s ease-out;
 }
 dialog::backdrop {
-  background: #17382655;
+  background: rgb(15 15 15 / 30%);
   backdrop-filter: blur(2px);
 }
 dialog.drawer {
@@ -930,9 +930,9 @@ dialog.wide {
   display: block;
 }
 .pay-hero > strong {
-  font-size: 38px;
-  font-weight: 550;
-  letter-spacing: -1.3px;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
   display: block;
   margin: 8px 0 20px;
   font-variant-numeric: tabular-nums;
@@ -1384,9 +1384,6 @@ dialog.wide {
   }
   dialog {
     max-width: calc(100% - 20px);
-  }
-  .pay-hero > strong {
-    font-size: 34px;
   }
   .form-section {
     padding: 20px 0;

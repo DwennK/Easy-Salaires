@@ -58,7 +58,7 @@ onBeforeUnmount(() => {
       />
       <span
         ><strong>{{ tr(label) }}</strong
-        ><small>Easy Salaires · v{{ version }}</small></span
+        ><small>Easy Salaire · v{{ version }}</small></span
       >
       <i v-if="update" class="update-dot" aria-hidden="true"></i>
     </button>

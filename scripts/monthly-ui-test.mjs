@@ -17,7 +17,7 @@ try {
   await page
     .getByRole("button", { name: "Essayer la démonstration", exact: true })
     .click();
-  await page.getByRole("heading", { name: "Les salaires." }).waitFor();
+  await page.getByRole("heading", { name: "Les salaires" }).waitFor();
   await page
     .getByRole("button", { name: "Salaires du mois", exact: true })
     .click();

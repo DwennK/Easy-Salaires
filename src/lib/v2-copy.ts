@@ -110,6 +110,7 @@ export const v2Copy: Record<string, [string, string]> = {
     "Same interface, another palette. Your choice is saved on this device.",
   ],
   kiwi: ["Kiwi", "Kiwi"],
+  rose: ["Rose", "Pink"],
   ocean: ["Océan", "Ocean"],
   lavender: ["Lavande", "Lavender"],
   terracotta: ["Terracotta", "Terracotta"],

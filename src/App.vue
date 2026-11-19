@@ -96,7 +96,8 @@ import {
 import AnnualWorkspace from "./components/AnnualWorkspace.vue";
 import AppUpdater from "./components/AppUpdater.vue";
 import ThemePicker from "./components/ThemePicker.vue";
-import icon from "./assets/app-icon.png";
+import wordmark from "./assets/wordmark.webp";
+import mascot from "./assets/payslip.webp";
 import "./monthly.css";
 const money = (value: number) => formatMoney(value, lang.value);
 const state = ref<State | null>(null),
@@ -977,30 +978,41 @@ onMounted(() =>
 </script>
 <template>
   <div v-if="!state" class="welcome">
-    <div class="welcome-top">
-      <img :src="icon" alt="" /><span>Easy <b>Salaires</b></span
-      ><small>SUISSE · SWITZERLAND</small>
-    </div>
     <main>
-      <div class="welcome-mark">
-        <FileText :size="34" :stroke-width="1.5" />
+      <div class="welcome-signature">
+        <img class="welcome-mascot" :src="mascot" alt="" />
+        <img class="welcome-wordmark" :src="wordmark" alt="Easy Salaire" />
       </div>
-      <p class="eyebrow">EASY SALAIRES</p>
       <h1>{{ tr("welcome") }}</h1>
-      <p>{{ tr("welcomeText") }}</p>
+      <p class="welcome-intro">{{ tr("welcomeText") }}</p>
       <div class="welcome-actions">
         <button
-          class="button primary"
+          class="welcome-choice"
+          :class="{ featured: native }"
           @click="native ? (createOpen = true) : notify('nativeOnly')"
         >
-          <Plus :size="18" />{{ tr("create") }}</button
-        ><button class="button secondary" @click="openCompany()">
-          <FolderOpen :size="18" />{{ tr("open") }}</button
-        ><button class="text-button" @click="startDemo" :disabled="busy">
-          {{ busy ? tr("pending") : tr("demo") }} <ArrowUpRight :size="16" />
+          <Plus :size="20" /><span>{{ tr("create") }}</span
+          ><ChevronRight :size="16" />
+        </button>
+        <button class="welcome-choice" @click="openCompany()">
+          <FolderOpen :size="20" /><span>{{ tr("open") }}</span
+          ><ChevronRight :size="16" />
+        </button>
+        <button
+          class="welcome-choice"
+          :class="{ featured: !native }"
+          @click="startDemo"
+          :disabled="busy"
+        >
+          <FileText :size="20" /><span>{{
+            busy ? tr("pending") : tr("demo")
+          }}</span
+          ><ArrowUpRight :size="16" />
         </button>
       </div>
-      <p class="notice" v-if="!native">{{ tr("webDemo") }}</p>
+      <p class="welcome-preview" v-if="!native">
+        <HardDrive :size="16" />{{ tr("webDemo") }}
+      </p>
       <section v-if="recents.length" class="recent-list">
         <h3>{{ tr("recent") }}</h3>
         <button
@@ -1018,10 +1030,10 @@ onMounted(() =>
   </div>
   <div v-else class="app-shell">
     <aside class="sidebar">
-      <a class="brand" href="#" @click.prevent="navigate('salaries')"
-        ><span class="v2-mark"><FileText :size="22" :stroke-width="1.8" /></span
-        ><span>Easy <b>Salaires</b></span></a
-      ><button
+      <a class="brand" href="#" @click.prevent="navigate('salaries')">
+        <img :src="wordmark" alt="Easy Salaire" />
+      </a>
+      <button
         class="company-switch"
         @click="companyMenuOpen = true"
         :disabled="busy"
@@ -1042,9 +1054,8 @@ onMounted(() =>
           @click="navigate(item.id)"
           :aria-current="page === item.id ? 'page' : undefined"
         >
-          <component :is="item.icon" :size="19" :stroke-width="1.7" />{{
-            tr(item.id)
-          }}
+          <component :is="item.icon" :size="24" :stroke-width="1.8" />
+          <span>{{ tr(item.id) }}</span>
         </button>
       </nav>
       <div class="sidebar-bottom">
@@ -1074,7 +1085,7 @@ onMounted(() =>
             aria-haspopup="dialog"
             @click="companyMenuOpen = true"
           >
-            {{ state.company.name || "Easy Salaires" }}
+            {{ state.company.name || "Easy Salaire" }}
           </button>
           <ChevronRight :size="13" /> <strong>{{ tr(page) }}</strong></span
         ><span class="topbar-right"
@@ -1100,14 +1111,8 @@ onMounted(() =>
           class="page-heading"
           v-if="page !== 'salaries' && page !== 'monthly'"
         >
-          <div>
-            <p class="eyebrow">
-              {{
-                page === "monthly"
-                  ? `${state.company.canton} · ${year}`
-                  : "EASY SALAIRES"
-              }}
-            </p>
+          <div class="page-title">
+            <img :src="mascot" class="page-mascot" alt="" />
             <h1>{{ tr(page) }}</h1>
             <p>
               {{
@@ -1133,9 +1138,9 @@ onMounted(() =>
         </div>
         <template v-if="page === 'salaries'">
           <div class="v2-heading">
-            <div>
-              <p class="eyebrow">{{ tr("payrollWorkspace") }}</p>
-              <h1>{{ tr("salaries") }}<span class="heading-dot">.</span></h1>
+            <div class="page-title">
+              <img :src="mascot" class="page-mascot" alt="" />
+              <h1>{{ tr("salaries") }}</h1>
               <p>{{ tr("salariesSub") }}</p>
             </div>
             <button
@@ -1168,7 +1173,8 @@ onMounted(() =>
           aria-labelledby="month-title"
         >
           <div class="month-heading">
-            <div>
+            <div class="page-title">
+              <img :src="mascot" class="page-mascot" alt="" />
               <p class="eyebrow">
                 {{ state.company.canton }} · {{ tr("monthOverview") }}
               </p>
@@ -1852,7 +1858,7 @@ onMounted(() =>
         </SettingsView>
       </main>
       <footer class="workspace-footer">
-        Easy Salaires <span>CHF · {{ tr("offline") }}</span>
+        Easy Salaire <span>CHF · {{ tr("offline") }}</span>
       </footer>
     </div>
   </div>

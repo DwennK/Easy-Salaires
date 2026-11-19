@@ -23,7 +23,7 @@ try {
   await page
     .getByRole("button", { name: "Essayer la démonstration", exact: true })
     .click();
-  await page.getByRole("heading", { name: "Les salaires." }).waitFor();
+  await page.getByRole("heading", { name: "Les salaires" }).waitFor();
   await saved();
   await noDecimalCommas();
   const salary = page.getByLabel("Salaire de base janvier", { exact: true });
@@ -33,7 +33,7 @@ try {
   await saved();
   assert.equal(await salary.inputValue(), "5200.30");
   await page.reload();
-  await page.getByRole("heading", { name: "Les salaires." }).waitFor();
+  await page.getByRole("heading", { name: "Les salaires" }).waitFor();
   assert.equal(await salary.inputValue(), "5200.30");
   await page
     .getByRole("button", { name: "Paiement janvier", exact: true })

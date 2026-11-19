@@ -9,11 +9,20 @@ Ressources locales ; aucun chargement externe à l’exécution. Vérification l
 | `public/fonts/NotoSans-Regular.ttf` | [Noto Sans](https://github.com/notofonts/latin-greek-cyrillic), SIL Open Font License 1.1, licence adjacente `OFL.txt`. Police des documents PDF, accents et texte sélectionnable. |
 | Inter | `@fontsource/inter`, SIL Open Font License 1.1, [projet Inter](https://github.com/rsms/inter). Sous-ensembles latins 400/500/600/700 embarqués par Vite. Licence dans le paquet. |
 | Icônes d’interface | `lucide-vue-next`, licence ISC, [Lucide](https://lucide.dev/license). SVG rendus localement. |
-| `src/assets/app-icon.png` | Création originale ImageGen, 8 octobre 2026. Déclinaisons desktop générées dans `src-tauri/icons/` avec Tauri CLI. Aucun service d’image utilisé par l’application. |
+| `src/assets/wordmark.webp` | Lettrage original « Easy Salaire », généré avec ImageGen le 19 novembre 2026. |
+| `src/assets/app-icon.png` et `src/assets/payslip.webp` | Mascotte originale générée avec ImageGen le 19 novembre 2026, déclinée pour l’interface et les icônes de plateforme dans `src-tauri/icons/` avec Tauri CLI. |
 
-Prompt utilisé pour l’icône :
+La palette et la navigation s’inspirent de [Handy](https://github.com/cjpais/Handy).
 
-> Use case: logo-brand. Create a single original desktop app icon for Easy Salaires, a Swiss offline payroll app. Square 1024x1024. Flat deep forest green background with a restrained warm ivory abstract folded salary slip symbol, three aligned horizontal lines and a small precise check integrated in the bottom right. Professional Swiss modernist geometry, balanced negative space, perfectly crisp edges, no text, no letters, no gradients, no shadows, no scene, no mockup, no border, full bleed square. This is a production app icon.
+Prompts ImageGen du 19 novembre 2026
+
+**Lettrage**
+
+> Logo-brand. Create an original illustrated typographic wordmark for the Swiss payroll desktop application. The ONLY text must say exactly “Easy Salaire” (singular). Arrange in two tightly interlocked stacked lines 'Easy' on top and 'Salaire' below as a single wide compact silhouette. 1970s friendly hand-lettered soft, heavy, slightly forward-leaning rounded bubble lettering with a lively baseline. Solid bubblegum pink #FAA2CA letters, thick even deep plum #382731 ink outlines, subtle offset chunky plum ink extrusion. Beautiful recognizable letter shapes and legibility when scaled to 140px wide. Transparent background, cropped visually around the centered lettering, no surrounding container, no badge, no mascot, no extra pictogram, no gradients, no glow, no scenery. Professional screen-printed typographic signature.
+
+**Mascotte**
+
+> Logo-brand. An original die-cut mascot mark for Easy Salaire, Swiss payroll desktop app. A single cheerful upright pink payslip with a folded upper-right corner, short scalloped receipt bottom edge, two short plum bookkeeping lines on its forehead, tiny happy ink eyes and smile, simple little bent arms with mitten hands and chunky little feet. Slight jaunty three-quarter tilt, one hand giving a thumbs up. Classic 1970s rubber-hose cartoon spot illustration, iconic and extremely simple silhouette. Flat opaque bubblegum pink #FAA2CA with a substantial smooth very dark plum #382731 outline, a small cream highlight in the fold. Crisp, flat vector-like fills, transparent background outside the character, no type, no words, no lettering, no coin, no square app tile, no texture, no shadow, no gradients. One large centered character, generous clear edge, square composition. Readable at app-icon size.
 
 SHA-256 des ressources conservées :
 
@@ -21,7 +30,7 @@ SHA-256 des ressources conservées :
 46a895f5392100fc90ff89024c86dce333259f6e2d3d81881e2d26721f98ad32  public/templates/form-11-dfe.pdf
 d926cfebf29ed3410b6e9f89b5db4f063ebe0686b228d22c73cd9fd644a51902  public/templates/guide-2026-fr.pdf
 b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5  public/fonts/NotoSans-Regular.ttf
-3c4ec8f54a5b8ed975db937a420029e085421df2ee3d44dc56500c691363fb52  src/assets/app-icon.png
+f93e6d2575e76e51b240f066a45793ef0ca3d7e0543f2d986f36f1fb146494a7  src/assets/app-icon.png
 ```
 
 Le guide et le formulaire AFC conservent leur présentation et leur langue officielles. Les textes produits par l’application sont FR/EN ; les données saisies par l’utilisateur restent inchangées.

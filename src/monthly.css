@@ -15,29 +15,29 @@
 }
 .month-heading h1 {
   margin: 0;
-  font-size: 32px;
-  letter-spacing: -1.2px;
 }
 .month-period {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 4px;
+  padding: 2px;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
+  border-radius: var(--control-radius);
+  background: var(--input);
 }
 .month-period select {
   border: 0;
-  background: transparent;
-  font-weight: 600;
+  background-color: transparent;
+  min-height: 32px;
+  padding-block: 4px;
+  font-weight: 500;
   font-size: 14px;
   text-transform: capitalize;
   padding-left: 7px;
 }
 .month-period .icon-button {
-  min-width: 36px;
-  min-height: 38px;
+  min-width: 32px;
+  min-height: 32px;
 }
 .month-focus {
   display: flex;
@@ -45,7 +45,7 @@
   gap: 15px;
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 12px;
+  border-radius: var(--panel-radius);
   padding: 18px 20px;
 }
 .month-focus-icon {
@@ -129,10 +129,11 @@
   margin: 16px 0 12px;
 }
 .month-table-toolbar h2 {
-  font-size: 15px;
   margin: 0;
 }
 .month-table-toolbar h2 > span {
+  text-transform: none;
+  letter-spacing: normal;
   font-size: 11px;
   color: var(--muted);
   font-weight: 400;
@@ -279,9 +280,6 @@
   .month-heading {
     gap: 16px;
     margin-bottom: 16px;
-  }
-  .month-heading h1 {
-    font-size: 28px;
   }
   .month-period {
     width: 100%;

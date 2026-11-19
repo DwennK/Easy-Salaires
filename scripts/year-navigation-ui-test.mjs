@@ -58,7 +58,7 @@ try {
   await page
     .getByRole("button", { name: "Essayer la démonstration", exact: true })
     .click();
-  await page.getByRole("heading", { name: "Les salaires." }).waitFor();
+  await page.getByRole("heading", { name: "Les salaires" }).waitFor();
   // This scenario exercises a missing prior year, independently of demo history.
   await page.evaluate(async () => {
     const { loadPreview, persist } = await import("/src/lib/bridge.ts");

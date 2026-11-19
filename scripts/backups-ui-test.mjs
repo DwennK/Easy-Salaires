@@ -87,7 +87,7 @@ async function session(
     await page
       .getByRole("button", { name: /Essayer la démonstration/ })
       .click();
-  await page.getByRole("heading", { name: "Les salaires." }).waitFor();
+  await page.getByRole("heading", { name: "Les salaires" }).waitFor();
   return { page, context };
 }
 async function backups(page) {
@@ -197,7 +197,7 @@ try {
   await companyName.fill(originalName);
   await backups(page);
   await page.getByRole("button", { name: "Choisir une sauvegarde" }).click();
-  await page.getByRole("heading", { name: "Les salaires." }).waitFor();
+  await page.getByRole("heading", { name: "Les salaires" }).waitFor();
   await backups(page);
   await page.getByText("Aucune pour le moment", { exact: true }).waitFor();
   await page.getByText("Détails du fichier", { exact: true }).click();

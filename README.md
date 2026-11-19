@@ -24,7 +24,7 @@ The app includes a **2026 CCNC / Neuchâtel preset**. Company-specific insurance
 | Document history | Preview payslips directly from the annual workspace, generate A4 PDFs, retain original revisions and identify documents that need updating. |
 | Exports | Produce individual or merged monthly PDFs, UTF-8 CSV, numeric Excel workbooks and a partially prefilled official salary certificate. |
 | Local storage | Keep each company's records, logos, document history and annual exports in a portable SQLite database. |
-| Personalization | Switch between French and English and choose Ocean (the default), Kiwi, Lavender or Terracotta colors. |
+| Personalization | Switch between French and English and choose Pink (the default), Ocean, Kiwi, Lavender or Terracotta accents. |
 
 ## Downloads
 

@@ -40,9 +40,10 @@ try {
   await page
     .getByRole("button", { name: "Essayer la démonstration", exact: true })
     .click();
-  await page.getByRole("heading", { name: "Les salaires." }).waitFor();
+  await page.getByRole("heading", { name: "Les salaires" }).waitFor();
   assert.equal(await page.locator(".year-grid tbody tr").count(), 12);
-  await capture("01-kiwi");
+  assert.equal(await page.locator("html").getAttribute("data-theme"), "rose");
+  await capture("01-rose");
   const first = await state();
   const id = first.employees[0].id;
   const original = JSON.stringify(first.revisions);
@@ -154,6 +155,7 @@ try {
     ["Lavande", "lavender"],
     ["Terracotta", "terracotta"],
     ["Kiwi", "kiwi"],
+    ["Rose", "rose"],
   ]) {
     await page.getByRole("button", { name, exact: true }).click();
     assert.equal(await page.locator("html").getAttribute("data-theme"), value);
@@ -161,7 +163,7 @@ try {
   }
   await page.getByRole("button", { name: "Océan", exact: true }).click();
   await page.reload();
-  await page.getByRole("heading", { name: "Les salaires." }).waitFor();
+  await page.getByRole("heading", { name: "Les salaires" }).waitFor();
   assert.equal(await page.locator("html").getAttribute("data-theme"), "ocean");
   await page.getByRole("button", { name: "Paramètres", exact: true }).click();
   await page
@@ -212,7 +214,7 @@ try {
           "partial payment",
           "PDF regeneration",
           "following months",
-          "4 themes",
+          "5 themes",
           "theme persistence",
           "settings",
           "employees",

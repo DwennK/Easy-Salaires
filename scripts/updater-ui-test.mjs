@@ -80,7 +80,7 @@ async function session(
   const page = await context.newPage();
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto(process.env.UI_URL || "http://127.0.0.1:1420");
-  await page.getByRole("heading", { name: "Les salaires." }).waitFor();
+  await page.getByRole("heading", { name: "Les salaires" }).waitFor();
   return { page, context };
 }
 try {
