@@ -4,7 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 const context = await browser.newContext({
   viewport: { width: 1440, height: 900 },
-  locale: "fr-CH",
+  locale: "en-US",
   acceptDownloads: true,
 });
 const page = await context.newPage();
@@ -115,7 +115,7 @@ try {
   await dialog().getByLabel("Montant payé", { exact: true }).fill("100");
   await dialog()
     .getByLabel("Date du paiement", { exact: true })
-    .fill("2026-10-09");
+    .fill("09/10/26");
   await save();
   s = await state();
   assert.equal(find(s, alex).paidAmount, 10000);
@@ -130,6 +130,10 @@ try {
     /Reste à payer/,
   );
   await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(
+    await dialog().getByLabel("Date du paiement", { exact: true }).inputValue(),
+    "09/10/26",
+  );
   await page.screenshot({
     path: `${output}/02-direct-edit-mobile.png`,
     fullPage: true,
@@ -168,7 +172,7 @@ try {
   await dialog().getByLabel("Montant payé", { exact: true }).fill("4000");
   await dialog()
     .getByLabel("Date du paiement", { exact: true })
-    .fill("2026-10-09");
+    .fill("09/10/26");
   await save();
   s = await state();
   assert.equal(find(s, camille).terms.salary, "5500");

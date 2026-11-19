@@ -156,6 +156,7 @@ const pairs: Record<string, [string, string]> = {
   acCap: ["Plafond AC annuel CHF", "Annual unemployment cap CHF"],
   laaCap: ["Plafond LAA annuel CHF", "Annual accident insurance cap CHF"],
   sourceUrl: ["Lien de la source officielle", "Official source URL"],
+  chooseDate: ["Choisir une date", "Choose a date"],
   verifiedDate: ["Date de vérification", "Verification date"],
   verifyRules: [
     "J’ai vérifié les règles de cette année auprès des sources officielles.",
@@ -452,7 +453,7 @@ const pairs: Record<string, [string, string]> = {
   contract: ["Contrat entreprise", "Company contract"],
   pensionStatement: ["Décompte de caisse", "Pension fund statement"],
   manual: ["Saisie manuelle", "Manual input"],
-  verified: ["Sources vérifiées le 08.10.2026", "Sources verified 08 Oct 2026"],
+  verified: ["Sources vérifiées le 08/10/26", "Sources verified 08/10/26"],
   sources: ["Sources & périmètre", "Sources & scope"],
   avs: ["AVS / AI / APG", "OASI / DI / IC"],
   ac: ["Assurance-chômage", "Unemployment insurance"],

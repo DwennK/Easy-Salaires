@@ -1,4 +1,5 @@
 import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { displayDate, displayInstant } from "../domain/dates";
 import fontkit from "@pdf-lib/fontkit";
 import type { Payroll, Lang, State, Employee } from "../domain/types";
 import { francs, money, sum, formatNumber } from "../domain/money";
@@ -132,12 +133,7 @@ export async function payslipPdf(
     }
   };
   addPage();
-  const editionDate = new Intl.DateTimeFormat(l === "fr" ? "fr-CH" : "en-CH", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    timeZone: "Europe/Zurich",
-  }).format(new Date(issuedAt));
+  const editionDate = displayInstant(issuedAt, "Europe/Zurich");
   right(`${tr("payslipIssuedOn", l)} ${editionDate}`, rightEdge, 777, 8, muted);
   let hasLogo = false;
   if (p.company.logo) {
@@ -511,7 +507,7 @@ export function exportRows(
       tr(p.needsReview ? "review" : p.issued ? "complete" : "draft", l),
       Number(francs(p.result.reimbursements ?? 0)),
       p.paidAmount == null ? "" : Number(francs(p.paidAmount)),
-      p.paidDate,
+      displayDate(p.paidDate),
     ]),
   ];
 }
@@ -643,12 +639,15 @@ export async function certificatePdf(
   if (review.transport) form.getCheckBox("OptionKreuzOhneRahmen_F").check();
   if (review.meals) form.getCheckBox("OptionKreuzOhneRahmen_G").check();
   set("AHVLinks_C", e.avs);
-  set("TextLinks_C-GebDatum", e.birthDate);
+  set("TextLinks_C-GebDatum", displayDate(e.birthDate));
   set("TextLinks_D", String(year));
-  set("TextLinks_E-von", e.start > `${year}-01-01` ? e.start : `${year}-01-01`);
+  set(
+    "TextLinks_E-von",
+    displayDate(e.start > `${year}-01-01` ? e.start : `${year}-01-01`),
+  );
   set(
     "TextLinks_E-bis",
-    e.end && e.end < `${year}-12-31` ? e.end : `${year}-12-31`,
+    displayDate(e.end && e.end < `${year}-12-31` ? e.end : `${year}-12-31`),
   );
   set(
     "TextMehrzeiligLinks_Empfaenger",
@@ -667,7 +666,7 @@ export async function certificatePdf(
   set("TextLinks_15_2", review.remarks.slice(95, 190));
   set(
     "TextLinks_I",
-    `${s.company.city}, ${new Date().toLocaleDateString(s.company.lang === "fr" ? "fr-CH" : "en-CH")}`,
+    `${s.company.city}, ${displayInstant(new Date(), "Europe/Zurich")}`,
   );
   set(
     "TextMehrzeiligLinks_Bestaetigung",

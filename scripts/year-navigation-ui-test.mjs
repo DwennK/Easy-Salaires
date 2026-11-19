@@ -94,7 +94,7 @@ try {
   await dialog
     .getByRole("tab", { name: "Contrat et salaire", exact: true })
     .click();
-  await dialog.getByLabel("Date d’entrée", { exact: true }).fill("2022-06-01");
+  await dialog.getByLabel("Date d’entrée", { exact: true }).fill("01/06/22");
   await dialog
     .getByRole("button", { name: "Enregistrer l’employé", exact: true })
     .click();

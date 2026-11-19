@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { displayDate } from "../domain/dates";
 import { computed, nextTick, onMounted, ref } from "vue";
 import {
   Plus,
@@ -535,7 +536,7 @@ function payload() {
       <summary>{{ tr("history") }}</summary>
       <div class="history-item" v-for="r in revisions" :key="r.id">
         <span
-          >r{{ r.number }} · {{ r.created.slice(0, 10) }} ·
+          >r{{ r.number }} · {{ displayDate(r.created.slice(0, 10)) }} ·
           {{ r.lang.toUpperCase() }}</span
         >
         <div class="inline-actions">

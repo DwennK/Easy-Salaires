@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { displayDate, isCalendarDate } from "../domain/dates";
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { PDFDocument } from "pdf-lib";
 import type { Company, Rules, State } from "../domain/types";
@@ -167,14 +168,16 @@ function saveRules() {
       )
     )
       throw Error("dateMonthError");
+    if (
+      rules.value.sources.some((s) => s.verified && !isCalendarDate(s.verified))
+    )
+      throw Error("invalidDate");
     // An unverified year can be saved as a draft; the engine still blocks issuing.
     if (
       rules.value.verified &&
       ((!props.state.company.demo && !rules.value.sources.length) ||
         rules.value.sources.some(
-          (s) =>
-            !/^https:\/\//.test(s.url) ||
-            !/^\d{4}-\d{2}-\d{2}$/.test(s.verified),
+          (s) => !/^https:\/\//.test(s.url) || !s.verified,
         ) ||
         !validAmount(rules.value.acCap, true) ||
         !validAmount(rules.value.laaCap, true))
@@ -434,7 +437,7 @@ function saveRules() {
           </p>
           <ul class="sources">
             <li v-for="s in rules.sources" :key="s.url">
-              {{ s.url }} · {{ s.verified }}
+              {{ s.url }} · {{ displayDate(s.verified) }}
             </li>
           </ul>
         </details>

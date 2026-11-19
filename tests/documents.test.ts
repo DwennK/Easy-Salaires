@@ -103,6 +103,8 @@ it("keeps salary, thirteenth-pay and expense layouts on A4 without changing payr
 it("keeps spreadsheet amounts numeric and neutralizes formula injection", async () => {
   const s = demoState();
   s.payrolls[0]!.employee.firstName = '=HYPERLINK("evil")';
+  s.payrolls[0]!.paidDate = "2026-11-30";
+  expect(new TextDecoder().decode(csvExport(s, 2026))).toContain("30/11/26");
   expect(csvCell("  =1+1")).toBe('"\'  =1+1"');
   expect(new TextDecoder().decode(csvExport(s, 2026))).toContain("'=HYPERLINK");
   const bytes = await xlsxExport(s, 2026);
@@ -111,6 +113,7 @@ it("keeps spreadsheet amounts numeric and neutralizes formula injection", async 
     bytes as unknown as Parameters<typeof book.xlsx.load>[0],
   );
   const sheet = book.worksheets[0]!;
+  expect(sheet.getCell("L2").value).toBe("30/11/26");
   expect(typeof sheet.getCell("C2").value).toBe("number");
   expect(typeof sheet.getCell("A2").value).toBe("string");
   expect(sheet.getCell("C2").value).toBe(s.payrolls[0]!.result.gross / 100);
@@ -182,10 +185,10 @@ it("labels historical demo certificates without inventing an AVS number", async 
       expect(form.getTextField("AHVLinks_C").getText() ?? "").toBe("");
       expect(form.getTextField("TextLinks_D").getText()).toBe(String(year));
       expect(form.getTextField("TextLinks_E-von").getText()).toBe(
-        `${year}-01-01`,
+        `01/01/${String(year).slice(-2)}`,
       );
       expect(form.getTextField("TextLinks_E-bis").getText()).toBe(
-        `${year}-12-31`,
+        `31/12/${String(year).slice(-2)}`,
       );
       expect(form.getTextField("DezZahlNull_11").getText()).toBe(
         String(Math.round(certificateNumbers(s, year, e.id).net / 100)),

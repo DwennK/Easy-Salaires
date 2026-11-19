@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { displayInstant } from "../domain/dates";
 import { Download, FolderOpen, HardDrive, RotateCcw } from "lucide-vue-next";
-import { lang, tr } from "../lib/i18n";
+import { tr } from "../lib/i18n";
 defineProps<{
   native: boolean;
   busy: boolean;
@@ -30,9 +31,7 @@ defineEmits<{ backup: []; folder: []; restore: [] }>();
           statusError
             ? tr("backupStatusUnavailable")
             : lastBackup
-              ? new Date(lastBackup.date).toLocaleString(
-                  lang === "fr" ? "fr-CH" : "en-CH",
-                )
+              ? displayInstant(lastBackup.date, undefined, "seconds")
               : tr("backupNone")
         }}</strong>
       </p>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, useId } from "vue";
 import { decimalText } from "../domain/money";
+import DateInput from "./DateInput.vue";
 import { periodLabel } from "../lib/i18n";
 const props = withDefaults(
   defineProps<{
@@ -10,6 +11,7 @@ const props = withDefaults(
     required?: boolean;
     disabled?: boolean;
     hint?: string;
+    pastOnly?: boolean;
     error?: string;
     inputmode?: "decimal" | "text" | "numeric";
     maxLength?: number;
@@ -37,9 +39,30 @@ const help = computed(
 );
 </script>
 <template>
-  <label class="field" :class="{ 'field-invalid': error }" :for="id">
-    <span>{{ label }} <b v-if="required" aria-hidden="true">*</b></span>
+  <component
+    :is="type === 'date' ? 'div' : 'label'"
+    class="field"
+    :class="{ 'field-invalid': error }"
+    :for="type === 'date' ? undefined : id"
+  >
+    <span
+      ><label v-if="type === 'date'" :for="id">{{ label }}</label
+      ><template v-else>{{ label }}</template>
+      <b v-if="required" aria-hidden="true">*</b></span
+    >
+    <DateInput
+      v-if="type === 'date'"
+      v-model="model"
+      :id="id"
+      :label="label"
+      :past-only="pastOnly"
+      :required="required"
+      :disabled="disabled"
+      :error="error"
+      :described-by="error || help ? `${id}-help` : undefined"
+    />
     <input
+      v-else
       :id="id"
       :aria-label="label"
       :value="focused ? (model ?? '') : display(model)"
@@ -61,5 +84,5 @@ const help = computed(
       :class="{ 'field-error': error }"
       >{{ error || help }}</small
     >
-  </label>
+  </component>
 </template>

@@ -108,7 +108,7 @@ try {
   await dialog.getByLabel("Montant payé", { exact: true }).fill("1000");
   await dialog
     .getByLabel("Date du paiement", { exact: true })
-    .fill("2026-01-29");
+    .fill("29/01/26");
   await dialog
     .getByRole("button", { name: "Enregistrer", exact: true })
     .click();

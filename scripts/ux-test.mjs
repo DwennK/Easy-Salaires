@@ -168,7 +168,7 @@ try {
   await dialog.getByLabel("Nom", { exact: true }).fill("Débutant");
   await dialog
     .getByLabel("Date de naissance", { exact: true })
-    .fill("1994-02-28");
+    .fill("28/02/94");
   await dialog.getByLabel("Adresse", { exact: true }).fill("Rue Exemple 2");
   await dialog.getByLabel("NPA", { exact: true }).fill("2000");
   await dialog.getByLabel("Localité", { exact: true }).fill("Neuchâtel");
@@ -184,7 +184,7 @@ try {
   );
   await dialog.getByLabel("Numéro AVS", { exact: true }).fill("");
   await dialog.getByRole("button", { name: "Continuer", exact: true }).click();
-  await dialog.getByLabel("Date d’entrée", { exact: true }).fill("2026-01-01");
+  await dialog.getByLabel("Date d’entrée", { exact: true }).fill("01/01/26");
   await dialog
     .getByLabel("Salaire brut mensuel à ce taux d’activité (CHF)", {
       exact: true,

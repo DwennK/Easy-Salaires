@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { displayDate } from "../domain/dates";
 import { computed, ref, watch } from "vue";
 import {
   ArrowRight,
@@ -425,7 +426,7 @@ watch(
                 <td class="payment-date">
                   {{
                     row.p.paidDate
-                      ? row.p.paidDate.split("-").reverse().join(".")
+                      ? displayDate(row.p.paidDate)
                       : "—"
                   }}
                 </td>

@@ -86,7 +86,7 @@ await page.screenshot({ path: "output/qa/employees.png", fullPage: true });
 await page.getByRole("button", { name: "Ajouter un employé" }).click();
 await page.getByLabel("Prénom", { exact: true }).fill("Élodie");
 await page.getByLabel("Nom", { exact: true }).fill("Test-Clavier");
-await page.getByLabel("Date de naissance").fill("1994-02-28");
+await page.getByLabel("Date de naissance", { exact: true }).fill("28/02/94");
 await page.getByRole("button", { name: "Continuer", exact: true }).click();
 await page
   .getByLabel("Salaire brut mensuel à ce taux d’activité (CHF)")

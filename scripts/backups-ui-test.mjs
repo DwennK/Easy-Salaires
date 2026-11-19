@@ -135,7 +135,7 @@ try {
     .waitFor();
   await page
     .locator(".backup-last")
-    .filter({ hasText: "09.10.2026" })
+    .filter({ hasText: "09/10/26" })
     .waitFor();
   await page.getByText("Détails du fichier", { exact: true }).click();
   await page

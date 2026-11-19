@@ -1,3 +1,4 @@
+import { isCalendarDate } from "./dates";
 import type { State, Employee, Payroll, Rules, Terms, Revision } from "./types";
 import { clone, companyDefaults, preset2026, uid } from "./defaults";
 import { activeIn, applicable, calculate } from "./payroll";
@@ -281,12 +282,7 @@ export function recordPayment(
 ) {
   const p = s.payrolls.find((p) => p.id === id);
   if (!p) throw Error("notFound");
-  if (
-    date &&
-    (!/^\d{4}-\d{2}-\d{2}$/.test(date) ||
-      !Number.isFinite(Date.parse(date)) ||
-      new Date(date).toISOString().slice(0, 10) !== date)
-  )
+  if (date && !isCalendarDate(date))
     throw Error("invalidDate");
   if (amount != null && d(amount).lt(0)) throw Error("numberPositive");
   if ((amount == null) !== !date) throw Error("paymentBothRequired");
@@ -407,10 +403,7 @@ export function validateEmployee(e: Employee): void {
   if (!e.firstName.trim() || !e.lastName.trim() || !e.start)
     throw new Error("employeeRequired");
   for (const date of [e.start, e.end, e.birthDate].filter(Boolean)) {
-    if (
-      !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
-      new Date(date).toISOString().slice(0, 10) !== date
-    )
+    if (!isCalendarDate(date))
       throw new Error("invalidDate");
   }
   if (e.end && e.end < e.start) throw new Error("invalidDate");

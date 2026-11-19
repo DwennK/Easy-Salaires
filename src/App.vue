@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { displayDate, displayInstant } from "./domain/dates";
 import { computed, onMounted, onBeforeUnmount, ref, watch, provide } from "vue";
 import {
   CalendarDays,
@@ -1567,7 +1568,7 @@ onMounted(() =>
                 </h2>
                 <p>
                   {{ e.role === "owner" ? tr("owner") : tr("employee") }} ·
-                  {{ e.city }} · {{ tr("start") }} {{ e.start }}
+                  {{ e.city }} · {{ tr("start") }} {{ displayDate(e.start) }}
                 </p>
               </div>
               <div class="employee-salary">
@@ -1792,7 +1793,7 @@ onMounted(() =>
               <span
                 >{{ exp.name
                 }}<small>{{
-                  exp.created.slice(0, 16).replace("T", " ")
+                  displayInstant(exp.created, "UTC", "minutes")
                 }}</small></span
               ><span class="badge amber" v-if="exp.stale">{{
                 tr("stale")

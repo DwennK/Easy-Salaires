@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { displayDate, isCalendarDate } from "../domain/dates";
 import { computed, nextTick, onMounted, ref } from "vue";
 import type { Employee, Contribution } from "../domain/types";
 import { clone, periodNow } from "../domain/defaults";
@@ -66,6 +67,8 @@ async function validate(scope: "identity" | "contract" | "all") {
   if (scope !== "contract") {
     for (const key of ["firstName", "lastName", "birthDate"] as const)
       if (!draft.value[key].trim()) fields.value[key] = tr("required");
+    if (draft.value.birthDate && !isCalendarDate(draft.value.birthDate))
+      fields.value.birthDate = tr("invalidDate");
     try {
       validateEmployee(draft.value);
     } catch (e) {
@@ -73,9 +76,13 @@ async function validate(scope: "identity" | "contract" | "all") {
       if (key === "invalidAvs") fields.value.avs = tr(key);
       else if (key === "invalidIban") fields.value.iban = tr(key);
       else if (key === "invalidDate") {
-        if (draft.value.end && draft.value.end < draft.value.start)
+        if (!isCalendarDate(draft.value.start)) fields.value.start = tr(key);
+        if (
+          draft.value.end &&
+          (!isCalendarDate(draft.value.end) ||
+            draft.value.end < draft.value.start)
+        )
           fields.value.end = tr(key);
-        else error.value = tr(key);
       } else if (key === "employeeRequired" && !draft.value.start)
         fields.value.start = tr("required");
       else error.value = tr(key);
@@ -92,11 +99,13 @@ async function validate(scope: "identity" | "contract" | "all") {
     }
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(term.value.effective))
       fields.value.effective = tr("invalidPeriod");
-    if (
-      !draft.value.start ||
-      (draft.value.end && draft.value.end < draft.value.start)
-    )
+    if (!isCalendarDate(draft.value.start))
       fields.value.start = tr("invalidDate");
+    if (
+      draft.value.end &&
+      (!isCalendarDate(draft.value.end) || draft.value.end < draft.value.start)
+    )
+      fields.value.end = tr("invalidDate");
   }
   if (Object.keys(fields.value).length || error.value) {
     const identity = ["firstName", "lastName", "birthDate", "avs", "iban"];
@@ -183,6 +192,7 @@ async function submit() {
             <Field
               data-correction="birthDate"
               v-model="draft.birthDate"
+              past-only
               type="date"
               :label="tr('birthDate')"
               required
@@ -263,11 +273,7 @@ async function submit() {
             <div>
               <dt>{{ tr("start") }}</dt>
               <dd>
-                {{
-                  draft.start
-                    ? draft.start.split("-").reverse().join(".")
-                    : tr("notEntered")
-                }}
+                {{ draft.start ? displayDate(draft.start) : tr("notEntered") }}
               </dd>
             </div>
             <div>
