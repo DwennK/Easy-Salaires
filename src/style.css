@@ -228,39 +228,6 @@ nav button:hover {
   display: flex;
   flex-direction: column;
 }
-.topbar {
-  height: 67px;
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--border);
-  padding: 0 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--surface);
-  font-size: 11px;
-  color: var(--muted);
-}
-.topbar > span {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-}
-.topbar strong {
-  font-weight: 500;
-  color: var(--ink);
-}
-.topbar-right {
-  font-size: 10px;
-}
-.demo-tag {
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  padding: 3px 7px;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  color: var(--muted);
-}
 .web-banner {
   display: flex;
   align-items: center;
@@ -1156,10 +1123,6 @@ dialog.wide {
     padding-left: 60px;
     padding-right: 60px;
   }
-  .topbar {
-    padding-left: 60px;
-    padding-right: 60px;
-  }
   td {
     padding-top: 26px;
     padding-bottom: 26px;
@@ -1186,9 +1149,6 @@ dialog.wide {
   }
   .main {
     padding: 30px 24px;
-  }
-  .topbar {
-    padding: 0 24px;
   }
   .web-banner {
     padding: 7px 24px;
@@ -1249,13 +1209,6 @@ dialog.wide {
   nav button svg {
     width: 19px;
     height: 19px;
-  }
-  .topbar {
-    height: 48px;
-    padding: 0 20px;
-  }
-  .topbar-right > span:last-child {
-    display: none;
   }
   .web-banner {
     padding: 9px 20px;

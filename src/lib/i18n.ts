@@ -283,7 +283,6 @@ const pairs: Record<string, [string, string]> = {
   ],
   history: ["Révisions archivées", "Archived revisions"],
   original: ["PDF original", "Original PDF"],
-  demoBadge: ["DÉMO", "DEMO"],
   print: ["Ouvrir pour imprimer", "Open to print"],
   revision: ["Révision", "Revision"],
   noRevision: [

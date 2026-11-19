@@ -32,7 +32,6 @@ import {
   uid,
   employeeDefaults,
   periodNow,
-  today,
 } from "./domain/defaults";
 import {
   emptyState,
@@ -1038,6 +1037,7 @@ onMounted(() =>
         @click="companyMenuOpen = true"
         :disabled="busy"
         :aria-label="tr('companyMenu')"
+        :title="state.company.name || tr('companyMenu')"
         aria-haspopup="dialog"
       >
         <span class="company-avatar"><Building2 :size="19" /></span
@@ -1076,27 +1076,6 @@ onMounted(() =>
       </div>
     </aside>
     <div class="workspace">
-      <header class="topbar">
-        <span
-          ><button
-            class="topbar-company"
-            :disabled="busy"
-            :aria-label="tr('companyMenu')"
-            aria-haspopup="dialog"
-            @click="companyMenuOpen = true"
-          >
-            {{ state.company.name || "Easy Salaire" }}
-          </button>
-          <ChevronRight :size="13" /> <strong>{{ tr(page) }}</strong></span
-        ><span class="topbar-right"
-          ><span v-if="state.company.demo" class="demo-tag">{{
-            tr("demoBadge")
-          }}</span
-          ><ShieldCheck :size="16" /><span>{{
-            today().split("-").reverse().join(".")
-          }}</span></span
-        >
-      </header>
       <div v-if="!native" class="web-banner">
         <HardDrive :size="15" />{{ tr("webDemo") }}
       </div>

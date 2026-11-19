@@ -186,7 +186,9 @@ try {
     .click();
   await page.getByRole("tab", { name: "Entreprise", exact: true }).click();
   assert.equal(await companyName.inputValue(), "Brouillon conservé");
-  await page.locator(".topbar-company").click();
+  await page
+    .getByRole("button", { name: "Menu de l’entreprise", exact: true })
+    .click();
   await page
     .getByRole("button", { name: "Changer d’entreprise", exact: true })
     .click();
@@ -217,7 +219,9 @@ try {
   await mobile.page.getByRole("tab", { name: "Sauvegardes" }).click();
   await fits(mobile.page);
   await shot(mobile.page, "mobile");
-  await mobile.page.locator(".topbar-company").click();
+  await mobile.page
+    .getByRole("button", { name: "Menu de l’entreprise", exact: true })
+    .click();
   await mobile.page
     .getByRole("button", { name: "Ouvrir une entreprise", exact: true })
     .waitFor();

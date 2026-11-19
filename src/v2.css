@@ -154,17 +154,6 @@ select:focus-visible {
   min-width: 0;
   width: calc(100% - 212px);
 }
-.topbar {
-  height: 48px;
-  padding: 0 36px;
-  background: var(--surface);
-  font-size: 12px;
-  color: var(--muted);
-  border-color: var(--border);
-}
-.topbar strong {
-  color: var(--ink);
-}
 .web-banner {
   background: var(--paper);
   color: var(--muted);
@@ -777,18 +766,6 @@ select:focus-visible {
 .settings-layout {
   max-width: 1100px;
 }
-.topbar-company {
-  border: 0;
-  padding: 2px 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-}
-.topbar-company:hover {
-  color: var(--green);
-  text-decoration: underline;
-}
 .company-menu-actions {
   display: grid;
   gap: 12px;
@@ -1068,6 +1045,13 @@ select:focus-visible {
     overflow: visible;
   }
   .sidebar .company-switch {
+    display: inline-flex;
+    width: auto;
+    margin: 0;
+    padding: 0;
+  }
+  .sidebar .company-switch > span:nth-child(2),
+  .sidebar .company-switch > svg {
     display: none;
   }
   .sidebar nav {
@@ -1126,10 +1110,6 @@ select:focus-visible {
   .workspace {
     width: 100%;
     margin: 0;
-  }
-  .topbar {
-    padding: 0 16px;
-    height: 47px;
   }
   .web-banner {
     padding: 7px 16px;
